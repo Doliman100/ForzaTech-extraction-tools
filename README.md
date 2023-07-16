@@ -138,12 +138,33 @@ ForzaHorizon5.exe (CRC32: BFCEECA8)
 ```
 00000001408FCFFE: call DecryptSQL(_, _, destination address, size, _)
 ```
+Stage 1: Arxan TransformIT.  
+Stage 2: SQL specific. The executable contains encryption algorithm.
 
 #### Links
 - [Download decrypted](https://mega.nz/folder/btYnBayQ#VVFbwoZ8uxli2xfTmmvadw)
 - [Data_Car table](https://forum.xentax.com/viewtopic.php?p=129562#p129562)
+- [010 Editor pattern](https://github.com/Nenkai/010GameTemplates/blob/main/Forza/TFIT.bt)
+- https://github.com/0x1F9F1/Swage/blob/master/src/crypto/tfit.h
+- https://github.com/EOSIO/mojey/blob/main/MojeyCommon/Arxan/TFIT/TFIT.h
+
+### `media\Stripped\StringTables\EN\*.str`
+Related to gamedbRC.slt tables.
+
+#### Structures
+- Root
+	- `00 04` version
+	- table name buffer
+- StringInfo
+	- id  
+The first byte of the placeholder name hash.  
+`_&16972226482902517561` `39 C7 E1 40 10 76 89 EB` "IDS_DisplayName_1"
+
+#### Links
+- [010 Editor pattern and C# hash function](https://github.com/Nenkai/010GameTemplates/blob/main/Forza/STR_StringTable.bt)
 
 ## Other tools
+
 ### 3DSimED
 Keygen is available on [Forsaken Customs](https://discord.gg/T2Z5urEnyz).  
 [3DSimED3.exe v3.2.3.1](https://web.archive.org/web/20230416135931/http://sim-garage.co.uk/wp-content/uploads/3DSimED32c.zip) (CRC32: C7FD36C3, protection: PC Guard 5.01, OEP: 007CC646, IAT: 008B1000)  
