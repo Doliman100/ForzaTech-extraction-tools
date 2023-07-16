@@ -22,9 +22,9 @@ class Reader {
     this.ptr += size;
     return value;
   }
-  readSequence(element_size) {
+  readSequence(elementSize) {
     const length = this.buffer.readUInt32LE(this.ptr);
-    return this.read(length * element_size + 4);
+    return this.read(length * elementSize + 4);
   }
   readString() {
     return this.readSequence(1);
@@ -44,16 +44,16 @@ const reader = new Reader(input);
 
 function readModel(reader, model) {
   model.type = reader.read(2);
-  const model_type = model.type.readUInt16LE();
-  if (model_type !== 18) {
-    if (model_type == 16) {
+  const modelType = model.type.readUInt16LE();
+  if (modelType !== 18) {
+    if (modelType == 16) {
       throw 'Warning: Deprecated model chunk type detected (16). Make sure the input file is not from Forza Horizon 4. Otherwise, report the issue and provide the path to the file you are trying to convert.'
     }
-    throw `Error: Unknown model chunk type: ${model_type}.`;
+    throw `Error: Unknown model chunk type: ${modelType}.`;
   }
   model.path = reader.readString();
   model.unknown1 = reader.read(66);
-  model.parent_bone_name = reader.readString();
+  model.parentBoneName = reader.readString();
   model.unknown2 = reader.read(7);
   model.materials = reader.readArray((material) => {
     material.name = reader.readString();
@@ -63,42 +63,42 @@ function readModel(reader, model) {
     texture.name = reader.readString();
     texture.unknown1 = reader.read(4);
   });
-  model.has_hash = reader.read(1);
-  model.unknown3 = reader.read(model.has_hash.readUInt8() ? 8 : 0);
+  model.hasHash = reader.read(1);
+  model.unknown3 = reader.read(model.hasHash.readUInt8() ? 8 : 0);
   model.unknown4 = reader.read(10);
-  model.swatch_path = reader.readString();
+  model.swatchPath = reader.readString();
   model.unknown5 = reader.read(46);
-  model.part_name = reader.readString();
+  model.partName = reader.readString();
   model.unknown6 = reader.read(40);
   model.unknown7 = reader.readSequence(16);
   model.unknown8 = reader.read(5);
 }
 
 root.type = reader.read(2);
-const root_type = root.type.readUInt16LE();
-if (root_type != 5 && root_type != 6) {
-  throw `Error: Unknown root chunk type: ${model_type}.`;
+const rootType = root.type.readUInt16LE();
+if (rootType != 5 && rootType != 6) {
+  throw `Error: Unknown root chunk type: ${rootType}.`;
 }
 root.unknown1 = reader.read(21);
 root.name = reader.readString();
 root.path = reader.readString();
 root.unknown2 = reader.read(2);
-root.block_b = reader.readArray((block_b) => {
-  block_b.unknown1 = reader.read(7);
-  block_b.models = reader.readArray((model) => {
+root.blockB = reader.readArray((blockB) => {
+  blockB.unknown1 = reader.read(7);
+  blockB.models = reader.readArray((model) => {
     readModel(reader, model);
   });
-  block_b.unknown2 = reader.read(32);
+  blockB.unknown2 = reader.read(32);
 });
-root.block_c = reader.readArray((block_c) => {
-  block_c.unknown1 = reader.read(6);
-  block_c.unknown_floats = reader.readSequence(45);
-  block_c.models = reader.readArray((model) => {
+root.blockC = reader.readArray((blockC) => {
+  blockC.unknown1 = reader.read(6);
+  blockC.unknownFloats = reader.readSequence(45);
+  blockC.models = reader.readArray((model) => {
     model.unknown9 = reader.readSequence(4);
     readModel(reader, model);
   });
 });
-if (root_type == 6) {
+if (rootType == 6) {
   root.unknown3 = reader.read(1);
 }
 
@@ -137,7 +137,7 @@ function writeModel(writer, model) {
   writer.writeUInt16(16); // model.type
   writer.write(model.path);
   writer.write(model.unknown1);
-  writer.write(model.parent_bone_name);
+  writer.write(model.parentBoneName);
   writer.write(model.unknown2);
   writer.writeArray(model.materials, (material) => {
     writer.write(material.name);
@@ -147,12 +147,12 @@ function writeModel(writer, model) {
     writer.write(texture.name);
     writer.write(texture.unknown1);
   });
-  writer.write(model.has_hash);
+  writer.write(model.hasHash);
   writer.write(model.unknown3);
   writer.write(model.unknown4);
-  writer.write(model.swatch_path);
+  writer.write(model.swatchPath);
   writer.write(model.unknown5);
-  writer.write(model.part_name);
+  writer.write(model.partName);
   writer.write(model.unknown6);
   writer.write(model.unknown7);
   // writer.write(model.unknown8); // for type 18 (not used)
@@ -163,17 +163,17 @@ writer.write(root.unknown1);
 writer.write(root.name);
 writer.write(root.path);
 writer.write(root.unknown2);
-writer.writeArray(root.block_b, (block_b) => {
-  writer.write(block_b.unknown1);
-  writer.writeArray(block_b.models, (model) => {
+writer.writeArray(root.blockB, (blockB) => {
+  writer.write(blockB.unknown1);
+  writer.writeArray(blockB.models, (model) => {
     writeModel(writer, model);
   });
-  writer.write(block_b.unknown2);
+  writer.write(blockB.unknown2);
 });
-writer.writeArray(root.block_c, (block_c) => {
-  writer.write(block_c.unknown1);
-  writer.write(block_c.unknown_floats);
-  writer.writeArray(block_c.models, (model) => {
+writer.writeArray(root.blockC, (blockC) => {
+  writer.write(blockC.unknown1);
+  writer.write(blockC.unknownFloats);
+  writer.writeArray(blockC.models, (model) => {
     writer.write(model.unknown9);
     writeModel(writer, model);
   });

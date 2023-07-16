@@ -11,12 +11,12 @@ const buffer = await readFile(path);
 const re = /^[\x20-\x7e]+$/;
 let ptr = 0;
 
-function readString(length_size) {
-  const begin = ptr + length_size;
+function readString(lengthSize) {
+  const begin = ptr + lengthSize;
   if (begin > buffer.byteLength) {
     return false;
   }
-  const length = buffer.readUIntLE(ptr, length_size);
+  const length = buffer.readUIntLE(ptr, lengthSize);
   const end = begin + length;
   if (end > buffer.byteLength) {
     return false;
