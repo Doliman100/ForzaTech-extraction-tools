@@ -65,9 +65,13 @@ function readModel(reader, model) {
   });
   model.hasHash = reader.read(1);
   model.unknown3 = reader.read(model.hasHash.readUInt8() ? 8 : 0);
-  model.unknown4 = reader.read(10);
-  model.swatchPath = reader.readString();
-  model.unknown5 = reader.read(46);
+  model.unknown4 = reader.read(4);
+  model.swatches = reader.readArray((swatch) => {
+    swatch.unknown1 = reader.read(2);
+    swatch.path = reader.readString();
+    swatch.unknown2 = reader.read(27);
+  });
+  model.unknown5 = reader.read(19);
   model.partName = reader.readString();
   model.unknown6 = reader.read(40);
   model.unknown7 = reader.readSequence(16);
@@ -150,7 +154,11 @@ function writeModel(writer, model) {
   writer.write(model.hasHash);
   writer.write(model.unknown3);
   writer.write(model.unknown4);
-  writer.write(model.swatchPath);
+  writer.writeArray(model.swatches, (swatch) => {
+    writer.write(swatch.unknown1);
+    writer.write(swatch.path);
+    writer.write(swatch.unknown2);
+  });
   writer.write(model.unknown5);
   writer.write(model.partName);
   writer.write(model.unknown6);

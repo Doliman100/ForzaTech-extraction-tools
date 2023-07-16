@@ -14,6 +14,11 @@ struct Texture {
     String name;
     u32 unknown;
 };
+struct Swatch {
+    u8 unknown1[2];
+    String path; // .swatchbin
+    u8 unknown2[27];
+};
 struct Model {
     u16 type; // 16, 18
     String path; // .modelbin
@@ -32,9 +37,8 @@ struct Model {
     }
 
     float unknown3; // -1, 0.5
-    u8 unknown4[6];
-    String swatch_path; // .swatchbin
-    u8 unknwon5[46];
+    Array<Swatch> swatches;
+    u8 unknwon5[19];
     String part_name;
     u128 hash; // of what?
     u8 zeroes[20];

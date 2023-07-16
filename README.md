@@ -27,7 +27,7 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
 ## Resources
 
 ### `media\Cars\*\*.carbin`
-*315 / 397 bytes unknown*
+*311 / 397 bytes unknown*
 
 #### Hierarchy
 - Root
@@ -54,7 +54,7 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
 - ChunkB *(4+(1\*13+4\*8)+((4))=53 / 67 bytes unknown)*  
 Upgrade parts?
   - `03 00` type
-- Model *(4\*16+2+1+4+(4)+8+4+1\*6+1\*46+16+1\*20+4+(16)+5=200 / 245 bytes unknown)*
+- Model *(4\*16+2+1+4+(4)+8+4+(1\*2+1\*27)+1\*19+16+1\*20+4+(16)+5=196 / 245 bytes unknown)*
   - type  
 `10 00` FH4  
 `12 00` FH5
