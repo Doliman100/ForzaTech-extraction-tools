@@ -1,4 +1,5 @@
 #include <std/io.pat>
+#include <type/guid.pat>
 
 struct Array<T> {
     u32 length;
@@ -38,12 +39,12 @@ struct Model {
 
     float unknown3; // -1, 0.5
     Array<Swatch> swatches;
-    u8 unknwon5[19];
+    u8 unknown5[19];
     String part_name;
-    u128 hash; // of what?
+    type::GUID guid;
     u8 zeroes[20];
     u32 unknown6;
-    Array<u128> unknown7;
+    Array<type::GUID> unknown7; // reference to other Models
 
     if (type == 18) {
         u8 unknown8[5];
@@ -73,7 +74,7 @@ struct ChunkB {
 
 struct Root {
     u16 type; // 5, 6
-    u8 hash[16]; // _skeleton.modelbin?
+    type::GUID guid;
     u8 unknown1[5];
     String car_name;
     String skeleton_path;

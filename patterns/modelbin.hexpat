@@ -24,18 +24,20 @@ struct Property {
     char tag[4];
     u16 data_size; // bit-shifted left by 4
     match (tag) {
-        ("  dI"): u32 *data_address : u16 [[pointer_base("relative_to_grandparent")]];
+        ("  dI"): s32 *data_address : u16 [[pointer_base("relative_to_grandparent")]];
         ("emaN"): char *data_address[data_size >> 4] : u16 [[pointer_base("relative_to_grandparent")]];
         ("xoBB"): BoundingBox *data_address : u16 [[pointer_base("relative_to_grandparent")]];
         ("feRT"): Array<u32, u32> *data_address : u16 [[pointer_base("relative_to_grandparent")]];
-        (_): u8 *data_address : u16 [[pointer_base("relative_to_grandparent")]];
+        (_): u8 *data_address[data_size >> 4] : u16 [[pointer_base("relative_to_grandparent")]];
     }
 };
 
 // Skel
 struct Bone {
     String name;
-    u8 unknown1[6];
+    s16 parent_id;
+    s16 first_child_id;
+    s16 next_id;
     float matrix[16];
 };
 struct Skeleton {
@@ -69,11 +71,13 @@ struct VertexLayer {
 struct VertexLayers {
     Array<String, u16> names;
     Array<VertexLayer, u16> layers;
+    u32 unknown1[layers.length];
+    u32 unknown2;
 };
 
 // VerB
 struct Vertex {
-    u16 x, y, z; // normalized
+    s16 x, y, z; // normalized
     u16 unknown;
 };
 struct VertexBuffer {
@@ -107,7 +111,7 @@ struct Entry {
         ("ldoM"): Model *data_address : u32;
         (_): u8 *data_address : u32; // aligned to 4 bytes
     }
-    u32 data_length[2];
+    u32 data_size[2];
 };
 
 struct Root {    

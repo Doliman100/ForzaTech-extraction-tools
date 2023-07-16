@@ -27,7 +27,7 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
 ## Resources
 
 ### `media\Cars\*\*.carbin`
-*311 / 397 bytes unknown*
+*279 / 397 bytes unknown*
 
 #### Hierarchy
 - Root
@@ -43,10 +43,11 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
   - ...
 
 #### Structures
-- Root *(1\*16+1\*5+2=23 / 42 bytes unknown)*
+- Root *(1\*5+2=7 / 42 bytes unknown)*
   - type  
 `05 00` FH4, FH5 NUL_Car_00  
 `06 00` FH5
+  - guid
   - car name
   - skeleton path
   - `01` at the end (type 6 only)
@@ -54,10 +55,11 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
 - ChunkB *(4+(1\*13+4\*8)+((4))=53 / 67 bytes unknown)*  
 Upgrade parts?
   - `03 00` type
-- Model *(4\*16+2+1+4+(4)+8+4+(1\*2+1\*27)+1\*19+16+1\*20+4+(16)+5=196 / 245 bytes unknown)*
+- Model *(4\*16+2+1+4+(4)+8+4+(1\*2+1\*27)+1\*19+1\*20+4+(16)+5=180 / 245 bytes unknown)*
   - type  
 `10 00` FH4  
 `12 00` FH5
+  - guid  
   - 5 unknown bytes at the end (type 18 only)
 
 #### Links
@@ -96,11 +98,14 @@ Upgrade parts?
         - Id
     - VLay - Vertex Layouts
       - properties
-        - Id
+        - Id  
+`-1` FH5 DOD_caliperLR_006
     - VerB - Vertex Buffer
       - properties
         - Id
     - Skin
+      - properties
+        - Id
     - MBuf
     - Modl - Model
       - count: 1
@@ -125,16 +130,39 @@ Upgrade parts?
 - [Part 4 - UV](https://forum.xentax.com/viewtopic.php?p=127586#p127586)
 
 ### `media\Stripped\gamedbRC.slt`
-*Not decrypted yet, x64dbg skills required.*  
 It seems to be necessary for correct scaling and positioning of wheels and selecting of tires.
+
+#### Decrypt
+[Tutorial](https://youtu.be/jOIT7nVqjRI)  
+ForzaHorizon5.exe (CRC32: BFCEECA8)
+```
+00000001408FCFFE: call DecryptSQL(_, _, destination address, size, _)
+```
+
+#### Links
+- [Download decrypted](https://mega.nz/folder/btYnBayQ#VVFbwoZ8uxli2xfTmmvadw)
 - [Data_Car table](https://forum.xentax.com/viewtopic.php?p=129562#p129562)
+
+## Other tools
+### 3DSimED
+Keygen is available on [Forsaken Customs](https://discord.gg/T2Z5urEnyz).  
+[3DSimED3.exe v3.2.3.1](https://web.archive.org/web/20230416135931/http://sim-garage.co.uk/wp-content/uploads/3DSimED32c.zip) (CRC32: C7FD36C3, protection: PC Guard 5.01, OEP: 007CC646, IAT: 008B1000)  
+IAT invalid imports:
+```
+008B141C: kernel32.ExitProcess
+008B15D8: ?
+008B15DC: ?
+008B15E0: ?
+008B1BC8: ?
+```
+The first four APIs are mentioned [here](https://foro.elhacker.net/ingenieria_inversa/help_desempacar_pc_guard_501-t420259.0.html;msg1961677#msg1961677). I couldn't find which DLLs they refer to. Maybe they are used to load import/export modules dynamically.
 
 ## Environment
 - Node.js v18.14.0
-- ImHex v1.28.0
-- Forza Horizon 5 v1.405.2.0 \[Steam\]
-- Forza Horizon 4 v1.466.445.0 \[Steam\]
-- Forza Horizon 3 v1.0.37.2 \[UWP\] "OpusDev"
+- ImHex v1.30.1
+- Forza Horizon 5 v1.405.2.0 (Steam) \[EMPRESS\]
+- Forza Horizon 4 v1.466.445.0 (Steam) \[EMPRESS\]
+- Forza Horizon 3 v1.0.37.2 (UWP) "OpusDev"
 
 ## Thanks
 The [XeNTaX](https://forum.xentax.com/index.php) community for sharing their research of `.carbin` and `.modelbin` file structure and creating tutorials for researching unknown 3D formats.
