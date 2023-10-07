@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { basename, dirname, extname, join } from 'path';
 
 // configuration
-const path = 'D:\\games\\rips\\FH5\\media\\Cars\\NUL_Car_00\\NUL_Car_00.carbin.bak';
+const path = process.argv[2];
 
 // fuse
 if (extname(path) !== '.bak') {
@@ -10,6 +10,7 @@ if (extname(path) !== '.bak') {
 }
 
 const root = {};
+let gameSeries = -1; // 0 - FM, 1 - FH
 
 // deserialize
 class Reader {
@@ -45,11 +46,28 @@ const reader = new Reader(input);
 function readModel(reader, model) {
   model.type = reader.read(2);
   const modelType = model.type.readUInt16LE();
-  if (modelType !== 18) {
-    if (modelType == 16) {
-      throw 'Warning: Deprecated model chunk type detected (16). Make sure the input file is not from Forza Horizon 4. Otherwise, report the issue and provide the path to the file you are trying to convert.'
+  if (gameSeries == -1) {
+    switch (modelType) {
+      case 16:
+      case 17:
+        throw `Warning: Deprecated model chunk type detected (${modelType}). Make sure the input file is not from Forza Motorsport 7/Forza Horizon 4. Otherwise, report the issue and provide the path to the file you are trying to convert.`
+      case 18:
+        gameSeries = 1; // FH
+        console.log('Assumed game series: Forza Horizon');
+        if (rootType != 5 && rootType != 6) {
+          console.log(`Warning: Unexpected root type (${rootType}) and model type (${modelType}) combination.`);
+        }
+        break;
+      case 21:
+        gameSeries = 0; // FM
+        console.log('Assumed game series: Forza Motorsport');
+          if (rootType != 10) {
+          console.log(`Warning: Unexpected root type (${rootType}) and model type (${modelType}) combination.`);
+        }
+        break;
+      default:
+        console.log(`Warning: Unknown model chunk type: ${modelType}.`);
     }
-    throw `Error: Unknown model chunk type: ${modelType}.`;
   }
   model.path = reader.readString();
   model.unknown1 = reader.read(66);
@@ -61,10 +79,14 @@ function readModel(reader, model) {
   });
   model.textures = reader.readArray((texture) => {
     texture.name = reader.readString();
-    texture.unknown1 = reader.read(4);
+    if (gameSeries == 0) {
+      texture.unknown1 = reader.read(8);
+    } else {
+      texture.unknown1 = reader.read(4);
+    }
   });
-  model.hasHash = reader.read(1);
-  model.unknown3 = reader.read(model.hasHash.readUInt8() ? 8 : 0);
+  model.droppable = reader.read(1);
+  model.unknown3 = reader.read(model.droppable.readUInt8() ? 8 : 0);
   model.unknown4 = reader.read(4);
   model.swatches = reader.readArray((swatch) => {
     swatch.unknown1 = reader.read(2);
@@ -73,15 +95,24 @@ function readModel(reader, model) {
   });
   model.unknown5 = reader.read(19);
   model.partName = reader.readString();
-  model.unknown6 = reader.read(40);
-  model.unknown7 = reader.readSequence(16);
-  model.unknown8 = reader.read(5);
+  model.unknown6 = reader.read(36);
+  if (gameSeries == 0) {
+    model.unknown10 = reader.readSequence(16);
+    model.unknown7 = reader.read(5);
+    model.unknown8 = reader.readString();
+    model.unknown11 = reader.readString();
+    model.unknown12 = reader.read(11);
+  } else {
+    model.unknown10 = reader.read(4);
+    model.unknown7 = reader.readSequence(16);
+    model.unknown8 = reader.read(5);
+  }
 }
 
 root.type = reader.read(2);
 const rootType = root.type.readUInt16LE();
-if (rootType != 5 && rootType != 6) {
-  throw `Error: Unknown root chunk type: ${rootType}.`;
+if (rootType != 5 && rootType != 6 && rootType != 10) {
+  console.log(`Warning: Unknown root chunk type: ${rootType}.`);
 }
 root.unknown1 = reader.read(21);
 root.name = reader.readString();
@@ -96,13 +127,13 @@ root.blockB = reader.readArray((blockB) => {
 });
 root.blockC = reader.readArray((blockC) => {
   blockC.unknown1 = reader.read(6);
-  blockC.unknownFloats = reader.readSequence(45);
+  blockC.upgrades = reader.readSequence(45);
   blockC.models = reader.readArray((model) => {
     model.unknown9 = reader.readSequence(4);
     readModel(reader, model);
   });
 });
-if (rootType == 6) {
+if (rootType >= 6 && gameSeries == 1) {
   root.unknown3 = reader.read(1);
 }
 
@@ -138,7 +169,7 @@ const output = Buffer.alloc(input.byteLength);
 const writer = new Writer(output);
 
 function writeModel(writer, model) {
-  writer.writeUInt16(16); // model.type
+  writer.writeUInt16(gameSeries == 0 ? 17 : 16); // model.type
   writer.write(model.path);
   writer.write(model.unknown1);
   writer.write(model.parentBoneName);
@@ -149,9 +180,9 @@ function writeModel(writer, model) {
   });
   writer.writeArray(model.textures, (texture) => {
     writer.write(texture.name);
-    writer.write(texture.unknown1);
+    writer.write(texture.unknown1.subarray(0, 4));
   });
-  writer.write(model.hasHash);
+  writer.write(model.droppable);
   writer.write(model.unknown3);
   writer.write(model.unknown4);
   writer.writeArray(model.swatches, (swatch) => {
@@ -162,6 +193,7 @@ function writeModel(writer, model) {
   writer.write(model.unknown5);
   writer.write(model.partName);
   writer.write(model.unknown6);
+  writer.write(model.unknown10);
   writer.write(model.unknown7);
   // writer.write(model.unknown8); // for type 18 (not used)
 }
@@ -180,7 +212,7 @@ writer.writeArray(root.blockB, (blockB) => {
 });
 writer.writeArray(root.blockC, (blockC) => {
   writer.write(blockC.unknown1);
-  writer.write(blockC.unknownFloats);
+  writer.write(blockC.upgrades);
   writer.writeArray(blockC.models, (model) => {
     writer.write(model.unknown9);
     writeModel(writer, model);

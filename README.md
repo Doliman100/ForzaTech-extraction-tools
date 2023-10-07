@@ -9,12 +9,12 @@ Collection of patterns, scripts and more for reverse engineering ForzaTech game 
 You need to edit `.js` files to configure input file or change preferences.
 ```
 cd  D:\ForzaTech-extraction-tools-main\scripts
-node string_extractor.js
+node carbin_converter.js "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
 ```
 
 ### `carbin_converter.js`
 ![screenshot of Mercedes AMG One opened in 3DSimED](https://user-images.githubusercontent.com/5512376/230759882-c1af0cf0-9a80-4f39-adf0-105b43bcac22.png)
-It deserializes the Forza Horizon 5 input file and then serializes the Forza Horizon 4 output file compatible with 3DSimED 3.2c. Actually, it just replaces the first byte with `05` and drops 5 unnecessary bytes at the end of model chunks. Forza Horiozn 5 also has an updated `.materialbin` file format not supported by 3DSimED, so a lot of warnings should be skipped.
+It deserializes the Forza Horizon 5/Forza Motorsport (2023) input file and then serializes the Forza Horizon 4/Forza Motorsport 7 output file compatible with 3DSimED 3.2c. Actually, it just replaces the first byte with `05` and drops 5 unnecessary bytes at the end of model chunks. Forza Horiozn 5 also has an updated `.materialbin` file format not supported by 3DSimED, so a lot of warnings must be skipped.
 
 ### `string_extractor.js`
 Prints a list of all strings contained in the input file in the following formats:
@@ -136,17 +136,15 @@ It seems to be necessary for correct scaling and positioning of wheels and selec
 [Tutorial](https://youtu.be/jOIT7nVqjRI)  
 ForzaHorizon5.exe (CRC32: BFCEECA8)
 ```
-00000001408FCFFE: call DecryptSQL(_, _, destination address, size, _)
+00000001408FCFFE: call DeobfuscateGameDB(_, _, destination address, size, _)
 ```
 Stage 1: Arxan TransformIT.  
-Stage 2: SQL specific. The executable contains encryption algorithm.
+Stage 2: Obfuscation based on CRC-32.
 
 #### Links
+- [Crypto tool](https://github.com/Doliman100/ForzaTech-encryption-tool)
 - [Download decrypted](https://mega.nz/folder/btYnBayQ#VVFbwoZ8uxli2xfTmmvadw)
 - [Data_Car table](https://forum.xentax.com/viewtopic.php?p=129562#p129562)
-- [010 Editor pattern](https://github.com/Nenkai/010GameTemplates/blob/main/Forza/TFIT.bt)
-- https://github.com/0x1F9F1/Swage/blob/master/src/crypto/tfit.h
-- https://github.com/EOSIO/mojey/blob/main/MojeyCommon/Arxan/TFIT/TFIT.h
 
 ### `media\Stripped\StringTables\EN\*.str`
 Related to gamedbRC.slt tables.

@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 
 // config
-const path = 'D:\\games\\rips\\FH5\\media\\Cars\\NUL_Car_00\\NUL_Car_00.carbin';
+const path = process.argv[2];
 
 const printAddresses = true; // prints the address of the first character of string
 
