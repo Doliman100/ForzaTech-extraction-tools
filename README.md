@@ -6,7 +6,6 @@ Collection of patterns, scripts and more for reverse engineering ForzaTech game 
 [ImHex](https://imhex.werwolv.net/) patterns for `.carbin` and `.modelbin` game resources.
 
 ## Scripts
-You need to edit `.js` files to configure input file or change preferences.
 ```
 cd  D:\ForzaTech-extraction-tools-main\scripts
 node carbin_converter.js "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
@@ -63,7 +62,7 @@ Upgrade parts?
   - 5 unknown bytes at the end (type 18 only)
 
 #### Links
-- [Model chunk](https://forum.xentax.com/viewtopic.php?p=128496#p128496)
+- [Model chunk](https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256&start=1815#p128496)
 
 ### `media\Cars\*\*.modelbin`
 
@@ -122,12 +121,13 @@ Upgrade parts?
     - aligned to 4 bytes
 
 #### Links
-- [Part 1](https://forum.xentax.com/viewtopic.php?p=126552#p126552)
-  - [Entry properties](https://forum.xentax.com/viewtopic.php?p=135231#p135231)
-- [Part 2](https://forum.xentax.com/viewtopic.php?p=126817#p126817)
-- [Part 3 - LOD](https://forum.xentax.com/viewtopic.php?p=127004#p127004)
-  - [Skel entry](https://forum.xentax.com/viewtopic.php?p=127226#p127226)
-- [Part 4 - UV](https://forum.xentax.com/viewtopic.php?p=127586#p127586)
+- [Part 1](https://web.archive.org/web/20231024100158/https://forum.xentax.com/viewtopic.php?t=4256&start=1590#p126552)
+  - [Entry properties](https://web.archive.org/web/20231014012208/https://forum.xentax.com/viewtopic.php?t=4256&start=2010#p135231)
+- [Part 2](https://web.archive.org/web/20231024083039/https://forum.xentax.com/viewtopic.php?t=4256&start=1650#p126817)
+- [Part 3 - LOD](https://web.archive.org/web/20231024054710/https://forum.xentax.com/viewtopic.php?t=4256&start=1695#p127004)
+  - [Skel entry](https://web.archive.org/web/20231024041832/https://forum.xentax.com/viewtopic.php?t=4256&start=1725#p127226)
+- [Part 4 - UV](https://web.archive.org/web/20231024022340/https://forum.xentax.com/viewtopic.php?t=4256&start=1770#p127586)
+- [Download experimental tools](https://mega.nz/folder/2pojyLQL#w1TZFlChnXTkrigs_uQhGw)
 
 ### `media\Stripped\gamedbRC.slt`
 It seems to be necessary for correct scaling and positioning of wheels and selecting of tires.
@@ -144,7 +144,7 @@ Stage 2: Obfuscation based on CRC-32.
 #### Links
 - [Crypto tool](https://github.com/Doliman100/ForzaTech-encryption-tool)
 - [Download decrypted](https://mega.nz/folder/btYnBayQ#VVFbwoZ8uxli2xfTmmvadw)
-- [Data_Car table](https://forum.xentax.com/viewtopic.php?p=129562#p129562)
+- [Data_Car table](https://web.archive.org/web/20231021095102/https://forum.xentax.com/viewtopic.php?t=4256&start=1905#p129562)
 
 ### `media\Stripped\StringTables\EN\*.str`
 Related to gamedbRC.slt tables.
@@ -164,7 +164,7 @@ The first byte of the placeholder name hash.
 ## Other tools
 
 ### 3DSimED
-Keygen is available on [Forsaken Customs](https://discord.gg/T2Z5urEnyz).  
+Keygen is available on [GameModels Community](https://discord.gg/XkCQGws).  
 [3DSimED3.exe v3.2.3.1](https://web.archive.org/web/20230416135931/http://sim-garage.co.uk/wp-content/uploads/3DSimED32c.zip) (CRC32: C7FD36C3, protection: PC Guard 5.01, OEP: 007CC646, IAT: 008B1000)  
 IAT invalid imports:
 ```
@@ -184,4 +184,4 @@ The first four APIs are mentioned [here](https://foro.elhacker.net/ingenieria_in
 - Forza Horizon 3 v1.0.37.2 (UWP) "OpusDev"
 
 ## Thanks
-The [XeNTaX](https://forum.xentax.com/index.php) community for sharing their research of `.carbin` and `.modelbin` file structure and creating tutorials for researching unknown 3D formats.
+The [XeNTaX](https://web.archive.org/web/20231024043255/https://forum.xentax.com/index.php) community for sharing their research of `.carbin` and `.modelbin` file structure and creating tutorials for researching unknown 3D formats.
