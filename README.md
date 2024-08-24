@@ -70,12 +70,7 @@ Upgrade parts?
 - Entry
   - tag
 
-    Reversed because it is stored as a number.[\[link\]](https://stackoverflow.com/q/22239629) In C++ it looks like this:
-    ```C++
-    uint32_t type = *(uint32_t *)("Grub");
-    std::cout << std::hex << type;
-    // Expected output: 62757247
-    ```
+    Multicharacter literal (`'Grub' == 0x47727562`).
 
     - Skel - Skeleton
       - count: 1
@@ -128,6 +123,29 @@ Upgrade parts?
   - [Skel entry](https://web.archive.org/web/20231024041832/https://forum.xentax.com/viewtopic.php?t=4256&start=1725#p127226)
 - [Part 4 - UV](https://web.archive.org/web/20231024022340/https://forum.xentax.com/viewtopic.php?t=4256&start=1770#p127586)
 - [Download experimental tools](https://mega.nz/folder/2pojyLQL#w1TZFlChnXTkrigs_uQhGw)
+
+### `media\_library\Shaders\*\*.shaderbin`
+
+It contains compiled HLSL shaders: DXBC (FH3), DXIL (FH5).
+
+#### Shader types
+- WheelBlurScenario
+- CarShadowDepthLightScenario(Morphing/Skinning) - Z Pre Pass
+- SimpleCarLightScenario(Morphing/Skinning) - GroundReflectionRenderer
+- CarDebugLightingLightScenario(Morphing/Skinning)
+- CarLightScenario(Morphing/Skinning) - Opaque
+
+#### How to disassemble DXBC
+Install Windows SDK. `*.durango.vso/pso` got error, use `*.pc.vso/pso`.
+```
+&"C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\fxc.exe" /dumpbin m_ch2normglossalphaemissiveCarLightScenario.pc.vso /Fc m_ch2normglossalphaemissiveCarLightScenario.pc.vso.asm
+```
+
+#### How to decompile DXBC
+Install https://github.com/yhyu13/HLSLDecompiler/releases. `*.pc.vso/pso` got error, use `*.durango.vso/pso`.
+```
+&"C:\Users\Doliman100\Downloads\HLSLDecompiler_0.3\cmd_Decompiler.exe" -D m_ch2normglossalphaemissiveCarLightScenario.durango.vso
+```
 
 ### `media\Stripped\gamedbRC.slt`
 It seems to be necessary for correct scaling and positioning of wheels and selecting of tires.

@@ -1,0 +1,107 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: physicsdefinition.bin
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+enum PhysicsDefinitionVersion {
+    PhysicsDefinitionVersion_Version8 = 7,
+    PhysicsDefinitionVersion_Version13 = 12,
+    PhysicsDefinitionVersion_EnumCount = 26,
+};
+
+enum PhysicsDefinitionType {
+    PhysicsDefinitionType_CollidableObject = 0,
+    PhysicsDefinitionType_Vehicle = 1,
+    PhysicsDefinitionType_Cloth = 2,
+};
+
+enum ECollisionShapeType {
+    ECollisionShapeType_Sphere = 0,
+    ECollisionShapeType_Box = 1,
+    ECollisionShapeType_ConvexHull = 2,
+    ECollisionShapeType_PointCloud = 5,
+    //ECollisionShapeType_Triangle = 3,
+    //ECollisionShapeType_TriangleMesh = 7,
+    //ECollisionShapeType_SimdConvexHull = 8,
+    // Collision
+    // Compound
+    // ConvexCollision
+    // !IsConvex: type > 8 || type == (7, 6, 4)
+};
+
+struct AABB {
+    float min[4];
+    float max[4];
+    float radius;
+};
+
+struct {
+    uint64 NumDefinitions; // unsgined __int64
+    struct {
+        struct {
+            uint32 Version; // unsigned long
+            if (Version < 12) {
+                Printf("versionEnum >= PhysicsDefinitionVersion::Version13");
+            }
+            if (Version >= 8) {
+                PhysicsDefinitionType DefinitionType; // long
+            }
+            if (!(Version >= 7 && Version < 26)) {
+                Printf("m_Version >= PhysicsDefinitionVersion::Version8 && m_Version < PhysicsDefinitionVersion::EnumCount");
+            }
+            float Mass;
+            AABB InertiaTensor;
+            AABB InverseInertiaTensor; // 0xFFC00000 is NaN?
+            float HalfExtents[3];
+            float BoundingRadius; // float
+            float GraphicsOffset[3];
+            int32 NumChildren; // long
+            if (Version >= 12) {
+                float AabbCentreOffset[3];
+            }
+            // SerializeShapes
+            int32 NumCollisionShapes; // long
+            struct {
+                ECollisionShapeType ShapeType; // long
+                if (ShapeType == ECollisionShapeType_Sphere) {
+                    // TODO
+                } else if (ShapeType == ECollisionShapeType_Box) {
+                    // TODO
+                } else if (ShapeType == ECollisionShapeType_ConvexHull) {
+                    // TODO
+                } else if (ShapeType == ECollisionShapeType_PointCloud) {
+                    int32 PointCloudSize; // long
+                    ubyte PointCloudData[PointCloudSize]; // void *
+                } else {
+                    Printf("Shape type not supported");
+                }
+            } CollisionShapes[NumCollisionShapes] <optimize=false>;
+            // SerializeShapesAndChildDefinitions
+            struct {
+                // TODO
+            } Children[NumChildren];
+        } CPhysicsDefinition;
+        if (CPhysicsDefinition.Version >= 24) {
+            uint32 UnkLength; // unsigned long
+            struct {
+                int32 Unk1;
+                int32 Unk2Length;
+                ubyte Unk2[Unk2Length];
+            } Unk[UnkLength] <optimize=false>;
+        }
+    } CVehiclePhysicsDefinition[NumDefinitions] <optimize=false>;
+    if (NumDefinitions != 0 && CVehiclePhysicsDefinition[0].CPhysicsDefinition.Version >= 11) {
+        uint64 MaxGlobalIndex; // unsgined __int64
+        if (MaxGlobalIndex != 0) {
+            Printf("uDummy==0");
+        }
+    }
+} CPhysicsDefinitionList;
