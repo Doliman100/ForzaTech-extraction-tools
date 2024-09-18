@@ -1,0 +1,78 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: XGameSave, XblGameSave.dll!ConnectedStorage::ContainerIndex
+//   Authors: Doliman100
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: containers.index
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct {
+    uint length;
+    if (length > 0) {
+        wchar_t data[length];
+    } else {
+        local wstring data;
+    }
+} WString <read=data, write=0>; // ConnectedStorage::LoadStringW()
+
+// ConnectedStorage::ContainerIndex
+uint version;
+if (version > 14) {
+    Printf("Warning: Invalid containers index version.\n");
+}
+
+uint entries_length;
+
+// ConnectedStorage::ContainerIndexMetaData
+if (version >= 8) {
+    WString unk; // qword0; HSTRING
+    WString title; // qword8
+}
+
+// ConnectedStorage::ContainerIndexSyncMetaData
+if (version >= 9) {
+    FILETIME timestamp; // qword0
+
+    if (version >= 10) {
+        uint flags; // dword8
+    } else {
+        ubyte flags; // dword8
+    }
+
+    if (version >= 13) {
+        WString guid; // qword10
+    }
+    
+    if (version >= 14) {
+        uint64 unk; // qword18
+    }
+}
+
+struct {
+    WString cloud_container_name; // if length > 255, then event InvalidEntryName
+    
+    if (version >= 12) {
+        WString local_container_name; // if length > 127, then event InvalidEntryName
+    }
+    
+    WString revision; // if length > 256, then event EtagLength
+    ubyte container_id; // ("container.%d", container_id)
+    uint state;
+    GUID container_name;
+    FILETIME timestamp;
+    uint unk; // always 0?; type?
+    uint unk; // always 0?
+    if (version >= 10) {
+        uint64 container_size;
+    } else {
+        uint container_size;
+    }
+    
+    local ubyte a[16] = container_name;
+    Printf("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X %s\n", a[3], a[2], a[1], a[0], a[5], a[4], a[7], a[6], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15], local_container_name.data);
+} entries[entries_length] <optimize=false>; // ConnectedStorage::ContainerIndexEntry

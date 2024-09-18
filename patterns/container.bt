@@ -1,0 +1,28 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: XGameSave, XblGameSave.dll!ConnectedStorage::Container
+//   Authors: Doliman100
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: container.*
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+uint version;
+if (version != 4) {
+    Printf("Warning: Invalid container version.\n");
+}
+
+uint blob_records_length;
+
+struct {
+    wchar_t name[64];
+    GUID file_name;
+    GUID atom_name;
+    
+    local ubyte a[16] = file_name;
+    Printf("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X %s\n", a[3], a[2], a[1], a[0], a[5], a[4], a[7], a[6], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15], name);
+} blob_records[blob_records_length] <optimize=false>; // ConnectedStorage::BlobRecord
