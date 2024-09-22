@@ -8,14 +8,14 @@ Collection of patterns, scripts and more for reverse engineering ForzaTech game 
 ## Scripts
 ```
 cd  D:\ForzaTech-extraction-tools-main\scripts
-node carbin_converter.js "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
+node carbin_converter.mjs "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
 ```
 
-### `carbin_converter.js`
+### `carbin_converter.mjs`
 ![screenshot of Mercedes AMG One opened in 3DSimED](https://user-images.githubusercontent.com/5512376/230759882-c1af0cf0-9a80-4f39-adf0-105b43bcac22.png)
 It deserializes the Forza Horizon 5/Forza Motorsport (2023) input file and then serializes the Forza Horizon 4/Forza Motorsport 7 output file compatible with 3DSimED 3.2c. Actually, it just replaces the first byte with `05` and drops 5 unnecessary bytes at the end of model chunks. Forza Horiozn 5 also has an updated `.materialbin` file format not supported by 3DSimED, so a lot of warnings must be skipped.
 
-### `string_extractor.js`
+### `string_extractor.mjs`
 Prints a list of all strings contained in the input file in the following formats:
 ```
 <u32 length> <u8 data[length]>
