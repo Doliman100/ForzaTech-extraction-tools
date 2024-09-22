@@ -61,7 +61,7 @@ function readModel(reader, model) {
       case 21:
         gameSeries = 0; // FM
         console.log('Assumed game series: Forza Motorsport');
-          if (rootType != 10) {
+          if (rootType != 10 && rootType != 11) {
           console.log(`Warning: Unexpected root type (${rootType}) and model type (${modelType}) combination.`);
         }
         break;
