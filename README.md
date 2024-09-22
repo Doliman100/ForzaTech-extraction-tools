@@ -1,19 +1,42 @@
 # ForzaTech extraction tools
-Collection of patterns, scripts and more for reverse engineering ForzaTech game engine resources used in Forza game series since 2015, starting with Forza Motorsport 6.
+Collection of patterns, scripts and more for reverse engineering ForzaTech game engine resources used in Forza game series since 2015, starting with Forza Motorsport 5.
 
 ## Patterns
 ![screenshot of .carbin file opened in a hex editor](https://user-images.githubusercontent.com/5512376/230833781-2040b6e6-3628-420d-89f7-91cf4a57582f.png)
 [ImHex](https://imhex.werwolv.net/) patterns for `.carbin` and `.modelbin` game resources.
 
 ## Scripts
-```
-cd  D:\ForzaTech-extraction-tools-main\scripts
-node carbin_converter.mjs "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
-```
+### `carbin_importer.py`, `modelbin_importer.py`
+![screenshot of Nissan Skyline GT-R opened in Blender](https://github.com/user-attachments/assets/6ab0e67d-19ec-48ee-a823-968590f95b2c)
+
+### Features
+* Rims and tires scaling
+* Wheel and controlArm positioning
+* Car bodies, upgrades and parts in the outliner (+case fixer)
+* Original mesh names
+* Hide transparent parts (windows, wheel blur) by render pass flag
+* Draw group (exterior, cockpit, shadow, hood, windshield reflection)
+* LODs (LODS, LOD0, LOD1, ...)
+* Normals, UVs
+* All ForzaTech PC and Xbox One games (FM5/6/6Apex/7/2023, FH2/3/4/5)
+* Game auto-detection heuristics
+* Materials partially (FH3 FOR_FocusRSRX_16 only)
+* Any `*.modelbin` file including characters, props and buildings (`modelbin_importer.py`)
+
+### How to use
+Paste the `carbin_importer.py` contents into Blender 4.2 Scripting Text Editor and Run Script.  
+`game_path` is the absolute path to the game rip root folder with unzipped cars, tires, materials, shaders and textures. The rip must have the original folder structure (`Media\Cars\NIS_SkylineFF_99\NIS_SkylineFF_99.carbin`). For FM7 and later, place the `Base` and `PCFamily` folder contents directly into the `Media` folder. Unzip `Materials_pri_*.zip` into the `Materials` folder.  
+`db_path` is the absolute path to the unencrypted GameDB.slt file. It may be located outside the game folder.
+If you don't have it (FH5 v1.642.644.0 and later, FM2023), then comment the block above and uncomment the block below `# FH3, KOE_One_15, 2188`, set `use_db = False`, edit `game_path` and `media_name` according to your needs.
 
 ### `carbin_converter.mjs`
 ![screenshot of Mercedes AMG One opened in 3DSimED](https://user-images.githubusercontent.com/5512376/230759882-c1af0cf0-9a80-4f39-adf0-105b43bcac22.png)
 It deserializes the Forza Horizon 5/Forza Motorsport (2023) input file and then serializes the Forza Horizon 4/Forza Motorsport 7 output file compatible with 3DSimED 3.2c. Actually, it just replaces the first byte with `05` and drops 5 unnecessary bytes at the end of model chunks. Forza Horiozn 5 also has an updated `.materialbin` file format not supported by 3DSimED, so a lot of warnings must be skipped.
+
+```
+cd  D:\ForzaTech-extraction-tools-main\scripts
+node carbin_converter.mjs "D:\games\rips\FH5\media\Cars\NUL_Car_00\NUL_Car_00.carbin.bak"
+```
 
 ### `string_extractor.mjs`
 Prints a list of all strings contained in the input file in the following formats:
@@ -25,7 +48,7 @@ For example, `0A 00 00 00 6E 75 6C 5F 63 61 72 5F 30 30` is a string "nul_car_00
 
 ## Resources
 
-### `media\Cars\*\*.carbin`
+### `Media\Cars\*\*.carbin`
 *279 / 397 bytes unknown*
 
 #### Hierarchy
@@ -64,7 +87,7 @@ Upgrade parts?
 #### Links
 - [Model chunk](https://web.archive.org/web/20231023061958/https://forum.xentax.com/viewtopic.php?t=4256&start=1815#p128496)
 
-### `media\Cars\*\*.modelbin`
+### `Media\Cars\*\*.modelbin`
 
 #### Structures
 - Entry
@@ -124,7 +147,7 @@ Upgrade parts?
 - [Part 4 - UV](https://web.archive.org/web/20231024022340/https://forum.xentax.com/viewtopic.php?t=4256&start=1770#p127586)
 - [Download experimental tools](https://mega.nz/folder/2pojyLQL#w1TZFlChnXTkrigs_uQhGw)
 
-### `media\_library\Shaders\*\*.shaderbin`
+### `Media\_library\Shaders\*\*.shaderbin`
 
 It contains compiled HLSL shaders: DXBC (FH3), DXIL (FH5).
 
@@ -147,7 +170,7 @@ Install https://github.com/yhyu13/HLSLDecompiler/releases. `*.pc.vso/pso` got er
 &"C:\Users\Doliman100\Downloads\HLSLDecompiler_0.3\cmd_Decompiler.exe" -D m_ch2normglossalphaemissiveCarLightScenario.durango.vso
 ```
 
-### `media\Stripped\gamedbRC.slt`
+### `Media\Stripped\gamedbRC.slt`
 It seems to be necessary for correct scaling and positioning of wheels and selecting of tires.
 
 #### Decrypt
@@ -164,7 +187,7 @@ Stage 2: Obfuscation based on CRC-32.
 - [Download decrypted](https://mega.nz/folder/btYnBayQ#VVFbwoZ8uxli2xfTmmvadw)
 - [Data_Car table](https://web.archive.org/web/20231021095102/https://forum.xentax.com/viewtopic.php?t=4256&start=1905#p129562)
 
-### `media\Stripped\StringTables\EN\*.str`
+### `Media\Stripped\StringTables\EN\*.str`
 Related to gamedbRC.slt tables.
 
 #### Structures
