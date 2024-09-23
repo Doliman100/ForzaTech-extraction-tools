@@ -2291,9 +2291,12 @@ for part in [*scene.parts, *scene.upgradable_parts]:
             # if not color_warning_printed:
             #     continue
             # paste below
-            if not blender_version_checked and (bpy.app.version < (4, 2, 0) or bpy.app.version >= (4, 3, 0)):
+            if not blender_version_checked:
                 blender_version_checked = True
-                print(F"Warning: Blender version 4.2.x required, but found: {bpy.app.version_string}")
+                if bpy.app.version < (4, 2, 0):
+                    raise RuntimeError(F"Blender version 4.2.x required, but found: {bpy.app.version_string}")
+                if bpy.app.version >= (4, 3, 0):
+                    print(F"Warning: Blender version 4.2.x required, but found: {bpy.app.version_string}")
 
             mesh2 = bpy.data.meshes.new(name=name)
             mesh2.from_pydata(verts2, [], faces, False)
