@@ -1890,12 +1890,14 @@ if use_db:
             """)
             rows = cursor.fetchall()
     except sqlite3.OperationalError as e:
-        if e.sqlite_errorcode == 14: # SQLITE_CANTOPEN
+        if e.sqlite_errorcode == sqlite3.SQLITE_CANTOPEN:
             e.args = (F'The database file was not found. db_path = "{db_path}"',)
             #raise RuntimeError(F'The database file was not found. db_path = "{db_path}"') from e
+        elif e.sqlite_errorcode == sqlite3.SQLITE_CANTOPEN_ISDIR:
+            e.args = (F'db_path is a folder, but a file was expected. db_path = "{db_path}"',) # "The database must be a file, but a folder was provided."
         raise
     except sqlite3.DatabaseError as e:
-        if e.sqlite_errorcode == 26: # SQLITE_NOTADB
+        if e.sqlite_errorcode == sqlite3.SQLITE_NOTADB:
             e.args = (F'The database file is not SQLite3, it\'s probably encrypted. db_path = "{db_path}"',)
         raise
 
