@@ -39,6 +39,7 @@ media_name = "KOE_One_15"
 ##media_name = "FOR_F150RaptorR_23" # FH5 new 'Modl' blob version
 ##media_name = "MER_G63AMG6x6_14" # no LM and RM wheels
 ##media_name = "FOR_FocusRSRX_16"
+##media_name = "NAP_Railton_33" # no BrakePart, CarRenderModel11 name "platform", normals look inside
 
 #game_path = R"D:\games\rips\FM"
 #db_path = R"D:\games\rips\FH5\media\stripped\gamedbRC-decrypted.slt"
@@ -1805,7 +1806,7 @@ class CarScene:
 
     parts: list[Part] # actual name: nonUpgradableParts
     part_wheels: Part # Wheels/WheelStyle
-    part_brakes: Part # Brakes
+    part_brakes: Part = None # Brakes
     part_tires: Part # TireCompound
     upgradable_parts: list[UpgradablePart]
 
@@ -2032,8 +2033,9 @@ for (model, wheel_model) in zip(scene.part_tires.models, scene.part_wheels.model
 
 scene.part_tires.tire_models = [None] * 6
 scene.part_wheels.wheel_models = [None] * 6
-scene.part_brakes.rotor_models = [None] * 6
-scene.part_brakes.caliper_models = [None] * 6
+if scene.part_brakes is not None:
+    scene.part_brakes.rotor_models = [None] * 6
+    scene.part_brakes.caliper_models = [None] * 6
 scene.control_arm_models = [None] * 6
 for part in [*scene.parts, *scene.upgradable_parts]:
     if suspension_only and part.type != 44 and part.type != 4 and part.type != 2 and part.type != 8: # WheelStyle, Brakes, CarBody, TireCompund
@@ -2170,7 +2172,10 @@ for wheel_index in range(6):
             spindle_offset = bone.transform[3][0]
             break
     control_arm_offset = 0.30480003 # 12 inch (0x3E9C0EC0)
-    rotor_model = scene.part_brakes.rotor_models[wheel_index]
+    if scene.part_brakes is not None:
+        rotor_model = scene.part_brakes.rotor_models[wheel_index]
+    else:
+        rotor_model = None
     if rotor_model is not None:
         for bone in rotor_model.modelbin.skeleton.bones: # if no bone, then find in _skeleton.modelbin (non-native not equal to offset from rotor)
             if bone.name == "controlArm":
