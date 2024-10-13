@@ -1841,7 +1841,7 @@ class CarScene:
         for part in self.parts:
             if self.version >= 4:
                 type = stream.read_u8() # used to check WheelPart/TirePart/...
-                if series != 1 or self.version < 5:
+                if series != 1 or self.version < 6:
                     type = IPart.type_v1_to_latest(type)
                 match type:
                     case 4:
