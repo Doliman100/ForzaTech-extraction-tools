@@ -1320,21 +1320,23 @@ class Modelbin: # CommonModel::ModelInstance?
                     v[0] += m[0] * weight # TODO: replace with mathutils.Vector
                     v[1] += m[1] * weight
                     v[2] += m[2] * weight
-                v[0] = v[0] * self.scale_x
                 for i in range(mesh.morph_weights_count):
                     m = (morph_data.stream.read_f16(), morph_data.stream.read_f16(), morph_data.stream.read_f16())
                     weight = self.weights[int(morph_data.stream.read_f16())]
                     n[0] += m[0] * weight
                     n[1] += m[1] * weight
                     n[2] += m[2] * weight
-                n[0] = n[0] / self.scale_x
+                
                 # norm; TODO: replace with mathutils.Vector.normalize()
                 n_length = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
                 n[0] /= n_length
                 n[1] /= n_length
                 n[2] /= n_length
+                
+                v[0] *= self.scale_x # TODO: bake scale_x to local transform
+                n[0] /= self.scale_x # n * transpose(invert(scale_x))
             
-            # TODO: don't bake bone transform to vertex position
+            # TODO: don't bake local transform to vertex position; apply local transform using Blender (matrix_world, not rotation_euler)
             v3 = [0, 0, 0]
             n3 = [0, 0, 0]
             for j in range(3):
@@ -1344,6 +1346,7 @@ class Modelbin: # CommonModel::ModelInstance?
                     else:
                         v3[j] += v[k] * self.transform[k][j]
                         n3[j] += n[k] * self.transform[k][j]
+            # TODO: don't bake bone transform; apply bone transform to bones only
             v2 = [0, 0, 0]
             n2 = [0, 0, 0]
             for j in range(3):
@@ -1354,15 +1357,14 @@ class Modelbin: # CommonModel::ModelInstance?
                         v2[j] += v3[k] * self.skeleton.bones[mesh.bone_index].transform[k][j]
                         n2[j] += n3[k] * self.skeleton.bones[mesh.bone_index].transform[k][j]
 
-            # # norm; TODO: replace with mathutils.Vector.normalize()
-            # n_length = math.sqrt(n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2])
-            # # TODO: check vector length first. find thereshold
-            # n2[0] /= n_length
-            # n2[1] /= n_length
-            # n2[2] /= n_length
+            # norm; located at the beginning of the pixel shader; TODO: replace with mathutils.Vector.normalize()
+            n_length = math.sqrt(n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2])
+            n2[0] /= n_length
+            n2[1] /= n_length
+            n2[2] /= n_length
 
             self.verts[vertex_id] = (-v2[0], -v2[2], v2[1]) # Y-up, Left-handed -> Z-up, Right-handed
-            #self.verts[vertex_id] = (-v[0], -v[2], v[1])
+            # self.verts[vertex_id] = (-v[0], -v[2], v[1])
             self.norms[vertex_id] = (-n2[0], -n2[2], n2[1])
             # self.norms[vertex_id] = (-n[0], -n[2], n[1])
 

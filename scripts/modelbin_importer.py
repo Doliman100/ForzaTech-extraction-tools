@@ -31,8 +31,11 @@ game_path = R"D:\games\rips\OpusDev"
 #p = R"D:\games\rips\OpusDev\media\cars\SUB_199_WRXSTIVT15r_16\scene\_library\scene\SUB_199_WRXSTIVT15r_Alt_001\Scene\exterior\bumperf\bumperf_a.modelbin"
 #p = R"D:\games\rips\FM\media\pcfamily\characters\_drivers\_library\body01_m\driver_full.modelbin"
 #p = R"D:\games\rips\FH2XO\media\cars\AUD_S4_13\scene\Exterior\Doors\doorHandleLF_a.modelbin"
+#p = R"D:\games\rips\FH2XO\media\cars\MER_SLR_05\scene\Exterior\BumperF\bumperF_a.modelbin"
+#p = R"D:\games\rips\OpusDev\media\cars\MER_SLR_05\scene\Exterior\BumperF\bumperF_a.modelbin"
 #p = R"D:\games\rips\OpusDev\MicrosoftStore_DLC\Hot Wheels\Media\Cinematic_Assets_OpusIsland\Showcase_AirshipIsland\Showcase_AirshipIsland.modelbin"
 #p = R"D:\games\rips\FH5\media\Cars\koe_one_15\scene\_library\Scene\KOE_Agera_Alt_001\Scene\exterior\bumperf\bumperF_a.modelbin.bak"
+#p = R"D:\games\rips\OpusDev\media\cars\_library\scene\tires\tire_OW_vintageRace\tireL_OW_vintageRace.modelbin"
 
 p = R"D:\games\rips\OpusDev\media\cars\FOR_FocusRSRX_16\scene\Exterior\BumperF\bumperF_a.modelbin"
 #p = R"D:\games\rips\OpusDev\media\cars\FOR_FocusRSRX_16\scene\Exterior\Fenders\fenders_a.modelbin"
@@ -1036,6 +1039,7 @@ class VertexLayout_Element:
         self.format = -1
 
 for mesh in meshes:
+#for mesh in [meshes[0]]:
     if mesh.levels_of_detail & requested_level_of_detail == 0:
         continue
     if mesh.render_pass & 0x10 == 0: # Shadow
@@ -1125,8 +1129,6 @@ for mesh in meshes:
         else:
             print("Error: Unexpected morph data format.")
 
-    #n_length_max = 0
-    #n_length_min = 1
     n = [1, 0, 0]
     for vertex_id in range(vertex_id_min, vertex_id_max + 1): # TODO: split loop on small wrapped with if-statement
         for texcoord, uv, uv_transform in zip(texcoords, uvs, mesh.uv_transforms):
@@ -1169,40 +1171,46 @@ for mesh in meshes:
                 v[0] += m[0] * weight # TODO: replace with mathutils.Vector
                 v[1] += m[1] * weight
                 v[2] += m[2] * weight
-            v[0] = v[0] * scale_x
             for i in range(mesh.morph_weights_count):
                 m = (morph_data.stream.read_f16(), morph_data.stream.read_f16(), morph_data.stream.read_f16())
                 weight = weights[int(morph_data.stream.read_f16())]
                 n[0] += m[0] * weight
                 n[1] += m[1] * weight
                 n[2] += m[2] * weight
-            n[0] = n[0] / scale_x
+            
             # norm; TODO: replace with mathutils.Vector.normalize()
             n_length = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
-            #if n_length_max < n_length:
-            #    n_length_max = n_length
-            #if n_length_min > n_length:
-            #    n_length_min = n_length
             n[0] /= n_length
             n[1] /= n_length
             n[2] /= n_length
+            
+            v[0] *= self.scale_x
+            n[0] /= self.scale_x # n * transpose(invert(scale_x))
         
         # TODO: don't bake transform to vertex position
         v2 = [0, 0, 0]
         n2 = [0, 0, 0]
+#        transform = ((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1))
+#        transform = ((0.7071067811865476, -0.7071067811865476, 0, 0), (0.7071067811865476, 0.7071067811865476, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)) # rotate_z_330
+        transform = skeleton.bones[mesh.bone_index].transform
         for j in range(3):
             for k in range(4):
                 if k == 3:
-                    v2[j] += skeleton.bones[mesh.bone_index].transform[k][j]
+                    v2[j] += transform[k][j]
                 else:
-                    v2[j] += v[k] * skeleton.bones[mesh.bone_index].transform[k][j]
-                    n2[j] += n[k] * skeleton.bones[mesh.bone_index].transform[k][j]
-
+                    v2[j] += v[k] * transform[k][j]
+                    n2[j] += n[k] * transform[k][j]
+        
+        # norm; located at the beginning of the pixel shader; TODO: replace with mathutils.Vector.normalize()
+        n_length = math.sqrt(n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2])
+        n2[0] /= n_length
+        n2[1] /= n_length
+        n2[2] /= n_length
+        
         verts[vertex_id] = (-v2[0], -v2[2], v2[1]) # Y-up, Left-handed -> Z-up, Right-handed
 #        verts[vertex_id] = (-v[0], -v[2], v[1])
         norms[vertex_id] = (-n2[0], -n2[2], n2[1])
 #        norms[vertex_id] = (-n[0], -n[2], n[1])
-    #print(n_length_max, n_length_min)
     
     verts2 = verts[vertex_id_min : vertex_id_max + 1] # bad, memory copying
     norms2 = norms[vertex_id_min : vertex_id_max + 1]
