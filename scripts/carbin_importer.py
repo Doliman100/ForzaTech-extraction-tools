@@ -12,8 +12,8 @@ from uuid import UUID
 
 #game_path = R"D:\games\rips\FH2XO"
 #db_path = R"D:\games\rips\FH2XO\media\stripped\gamedbRC.slt"
-##media_name = "NIS_SkylineFF_99"
-#media_name = "AUD_S4_13" # normals bug
+#media_name = "NIS_SkylineFF_99"
+##media_name = "AUD_S4_13" # normals bug
 ##media_name = "MER_SLR_05"
 
 game_path = R"D:\games\rips\OpusDev" # unzipped
@@ -1165,9 +1165,6 @@ class Modelbin: # CommonModel::ModelInstance?
         self.morph_data_buffers = defaultdict(ModelBuffer)
         for morph_data_buffer_blob in morph_data_buffer_blobs:
             self.morph_data_buffers[morph_data_buffer_blob.metadata[Tag.Id].read_s32()].deserialize(morph_data_buffer_blob)
-        # self.morph_data_buffers = [ModelBuffer() for _ in range(len(morph_data_buffer_blobs))]
-        # for morph_data_buffer_blob in morph_data_buffer_blobs:
-        #     self.morph_data_buffers[morph_data_buffer_blob.metadata[Tag.Id].read_s32()].deserialize(morph_data_buffer_blob)
 
         mesh_blobs = bundle.blobs[Tag.Mesh]
         mesh_blobs_length = len(mesh_blobs)

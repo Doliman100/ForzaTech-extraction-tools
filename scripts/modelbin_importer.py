@@ -36,6 +36,7 @@ game_path = R"D:\games\rips\OpusDev"
 #p = R"D:\games\rips\OpusDev\MicrosoftStore_DLC\Hot Wheels\Media\Cinematic_Assets_OpusIsland\Showcase_AirshipIsland\Showcase_AirshipIsland.modelbin"
 #p = R"D:\games\rips\FH5\media\Cars\koe_one_15\scene\_library\Scene\KOE_Agera_Alt_001\Scene\exterior\bumperf\bumperF_a.modelbin.bak"
 #p = R"D:\games\rips\OpusDev\media\cars\_library\scene\tires\tire_OW_vintageRace\tireL_OW_vintageRace.modelbin"
+#p = R"D:\games\rips\FH5\media\Cars\MCL_765LT_21\scene\Exterior\platform\body_a.modelbin"
 
 p = R"D:\games\rips\OpusDev\media\cars\FOR_FocusRSRX_16\scene\Exterior\BumperF\bumperF_a.modelbin"
 #p = R"D:\games\rips\OpusDev\media\cars\FOR_FocusRSRX_16\scene\Exterior\Fenders\fenders_a.modelbin"
@@ -1005,7 +1006,7 @@ for vertex_buffer_blob in vertex_buffer_blobs:
     vertex_buffers[vertex_buffer_blob.metadata[Tag.Id].read_s32() + 1].deserialize(vertex_buffer_blob)
 
 morph_data_buffer_blobs = bundle.blobs[Tag.MBuf]
-morph_data_buffers = [ModelBuffer() for _ in range(len(morph_data_buffer_blobs))]
+morph_data_buffers = defaultdict(ModelBuffer)
 for morph_data_buffer_blob in morph_data_buffer_blobs:
     morph_data_buffers[morph_data_buffer_blob.metadata[Tag.Id].read_s32()].deserialize(morph_data_buffer_blob)
 
