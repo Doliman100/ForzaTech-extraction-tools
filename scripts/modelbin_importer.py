@@ -1185,8 +1185,8 @@ for mesh in meshes:
             n[1] /= n_length
             n[2] /= n_length
             
-            v[0] *= self.scale_x
-            n[0] /= self.scale_x # n * transpose(invert(scale_x))
+            v[0] *= scale_x
+            n[0] /= scale_x # n * transpose(invert(scale_x))
         
         # TODO: don't bake transform to vertex position
         v2 = [0, 0, 0]
