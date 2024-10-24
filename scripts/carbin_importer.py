@@ -1534,6 +1534,8 @@ class CarRenderModel11:
                 return "Pillar"
             case "plate" | "plates":
                 return name # actual value
+            case "platform":
+                return "Platform"
             case "primarylights":
                 return "PrimaryLights"
             case "secondarylights":
