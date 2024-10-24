@@ -60,9 +60,9 @@ media_name = "KOE_One_15"
 #ModelWheelbase = 2.659872 # from Data_CarBody
 #ModelFrontTrackOuter = 1.965
 #ModelRearTrackOuter = 2
-#BottomCenterWheelbasePosx = 0
-#BottomCenterWheelbasePosy = 0
-#BottomCenterWheelbasePosz = 0.040323
+#BottomCenterWheelbasePosX = 0
+#BottomCenterWheelbasePosY = 0
+#BottomCenterWheelbasePosZ = 0.040323
 #ModelFrontStockRideHeight = 0.085
 #ModelRearStockRideHeight = 0.117
 
@@ -1882,10 +1882,10 @@ if use_db:
                 Data_CarBody.BottomCenterWheelbasePosx,
                 Data_CarBody.BottomCenterWheelbasePosy,
                 Data_CarBody.BottomCenterWheelbasePosZ
-            FROM 'Data_Car'
-                INNER JOIN 'List_UpgradeTireCompound' ON Data_Car.Id = List_UpgradeTireCompound.Ordinal
-                INNER JOIN 'List_UpgradeCarBody' ON Data_Car.Id = List_UpgradeCarBody.Ordinal
-                INNER JOIN 'Data_CarBody' ON List_UpgradeCarBody.CarBodyID = Data_CarBody.Id
+            FROM Data_Car
+                INNER JOIN List_UpgradeTireCompound ON List_UpgradeTireCompound.Ordinal = Data_Car.Id
+                INNER JOIN List_UpgradeCarBody ON List_UpgradeCarBody.Ordinal = Data_Car.Id
+                INNER JOIN Data_CarBody ON Data_CarBody.Id = List_UpgradeCarBody.CarBodyID
             WHERE MediaName LIKE '{media_name}'
                 AND List_UpgradeTireCompound.IsStock = 1
             ORDER BY List_UpgradeCarBody.CarBodyID
@@ -1928,9 +1928,9 @@ if use_db:
     ModelRearTrackOuter = row[12]
     ModelFrontStockRideHeight = row[13]
     ModelRearStockRideHeight = row[14]
-    BottomCenterWheelbasePosx = row[15]
-    BottomCenterWheelbasePosy = row[16]
-    BottomCenterWheelbasePosz = row[17]
+    BottomCenterWheelbasePosX = row[15]
+    BottomCenterWheelbasePosY = row[16]
+    BottomCenterWheelbasePosZ = row[17]
     #DefRideHeight = 0.1616 # unused; from List_UpgradeSpringDamper(FrontSpringDamperPhysicsID, RearSpringDamperPhysicsID) -> List_SpringDamperPhysics
 
 # if cars_internal_path[:5].lower() != "game:":
@@ -2109,9 +2109,9 @@ for part in [*scene.parts, *scene.upgradable_parts]:
                 if not is_front:
                     translate[2] = -translate[2]
                 
-                translate[0] -= BottomCenterWheelbasePosx
-                translate[1] -= BottomCenterWheelbasePosy
-                translate[2] -= BottomCenterWheelbasePosz
+                translate[0] += BottomCenterWheelbasePosX
+                translate[1] += BottomCenterWheelbasePosY
+                translate[2] -= BottomCenterWheelbasePosZ
                 
                 if create_spheres:
                     v = translate
