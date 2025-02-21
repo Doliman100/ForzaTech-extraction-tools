@@ -1,0 +1,172 @@
+//------------------------------------------------
+//--- 010 Editor v15.0.1 Binary Template
+//
+//      File: VectorFont
+//   Authors: Doliman100
+//   Version: 1.0 (FH3)
+//   Purpose: 
+//  Category: 
+// File Mask: *.vfont
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+struct {
+    char name[128];
+    uint chars_length; // m_fontHeader.numChars
+    ubyte unk1[8];
+    uint unk4_length;
+    
+    float space_width;
+    union {
+        ubyte data[12];
+        struct {
+            uint dword94;
+            float float98;
+            uint dword9C; // undefined char code?
+        } maybe;
+    } gap94;
+    
+    int win_ascent;
+    int win_descent;
+    int dwordA8; // equals hhead_line_gap
+    
+    int typo_ascent;
+    int typo_descent;
+    int typo_line_gap;
+    
+    int hhead_ascent;
+    int hhead_descent;
+    int hhead_line_gap;
+    
+    int em_size;
+    int capital_height;
+} header; // m_fontHeader; size: 0xCC
+
+// float GetFontAdvance = (win_ascent + win_descent) / (float)em_size * font_size_pt
+// float GetFontBaseline = win_ascent / (float)em_size * font_size_pt
+// float GetFontLineGap = typo_line_gap / (float)em_size * font_size_pt
+
+struct VectorFontChar {
+    int character; // int character;
+    float width;
+    int vertexes_length; // int vertexCount;
+    int indexes_length; // int indexCount;
+    ubyte unk[12];
+    if (unk[0] || unk[1] || unk[2] || unk[3] || unk[4] || unk[5] || unk[6] || unk[7] || unk[8] || unk[9] || unk[10] || unk[11]) {
+        Printf("Warning: %08X\n", FTell());
+    }
+} chars[header.chars_length] <optimize=false, read=Str("%c", character)>; // std::vector<VectorFontChar> m_fontChars; size: 0x1C
+
+if (header.unk4_length > 0) {
+    union {
+        ubyte data[12];
+        struct {
+            uint unk;
+            uint unk; // "1 ,.", ",-./:-"
+            ushort unk;
+            ushort unk;
+        } maybe;
+    } unk4[header.unk4_length]; // std::vector<?> ? // kern?
+}
+
+int glyphs_length; // int glyphCount;
+struct {
+    int character; // int character;
+    int vertexes_length; // int vertexCount;
+    int indexes_length; // int indexCount;
+    if (vertexes_length > 0) {
+        struct {
+            hfloat x;
+            hfloat y;
+            hfloat u;
+            hfloat v;
+        } vertexes[vertexes_length]; // half[4] (from shader)
+    }
+    if (indexes_length > 0) {
+        ushort indexes[indexes_length]; // ushort (from shader)
+        //struct {
+        //    ushort a;
+        //    ushort b;
+        //    ushort c;
+        //} faces[indexes_length / 3];
+    }
+} glyphs[glyphs_length] <optimize=false>;
+
+local int print = 0;
+if (print == 1) {
+    local int total_vertex_count = 0, total_index_count = 0;
+    local int i;
+    for (i = 0; i < header.chars_length; i++) {
+        Printf("%d %d %d : %d %d, %f\n", chars[i].character, total_vertex_count, total_index_count, chars[i].vertexes_length, chars[i].indexes_length, chars[i].width);
+        total_vertex_count += chars[i].vertexes_length;
+        total_index_count += chars[i].indexes_length;
+    }
+    //Printf("total_vertex_count = %d\ntotal_index_count = %d\n", total_vertex_count, total_index_count);
+} else if (print == 2 || print == 3 || print == 4) {
+    // print = 2 (info), 3 (mesh), 4 (UV)
+    
+    // DG1_ArialBold
+    //local int glyph = 0; // '\x1F' (rectangle)
+    //local int glyph = 2; // '"'
+    //local int glyph = 7; // '0'
+    //local int glyph = 8; // '1'
+    //local int glyph = 9; // '2'
+    //local int glyph = 11; // '4'
+    //local int glyph = 18; // 'D'
+    local int glyph = 20; // 'P'
+    
+    // Anthem_A
+    //local int glyph = 21; // '2'
+    //local int glyph = 51; // 'P'
+    //local int glyph = 72; // 'e'
+    
+    // Anthem_CHS
+    //local int glyph = 19; // '2'
+    
+    local int n = glyphs[glyph].vertexes_length;
+    local int m = glyphs[glyph].indexes_length / 3;
+    local int i;
+    Printf("# '%c' %d %d\n", glyphs[glyph].character, glyphs[glyph].vertexes_length, glyphs[glyph].indexes_length);
+    if (print == 3) {
+        local hfloat x, y;
+        Printf("verts = [\n");
+        for (i = 0; i < n; i++) {
+            x = glyphs[glyph].vertexes[i].x;
+            y = glyphs[glyph].vertexes[i].y;
+            Printf("    (%f, %f, 0),\n", x, y);
+        }
+        Printf("]\n");
+
+        local hfloat u, v;
+        Printf("uv = [\n");
+        for (i = 0; i < n; i++) {
+            u = glyphs[glyph].vertexes[i].u;
+            v = glyphs[glyph].vertexes[i].v;
+            Printf("    (%f, %f),\n", u, v);
+        }
+        Printf("]\n");
+
+        local ushort a, b, c;
+        Printf("faces = [\n");
+        for (i = 0; i < m; i++) {
+            a = glyphs[glyph].indexes[i * 3];
+            b = glyphs[glyph].indexes[i * 3 + 1];
+            c = glyphs[glyph].indexes[i * 3 + 2];
+            Printf("    (%u, %u, %u),\n", a, b, c);
+        }
+        Printf("]\n");
+    } else if (print == 4) {
+        local hfloat x, y;
+        local hfloat u, v;
+        for (i = 0; i < n; i++) {
+            x = glyphs[glyph].vertexes[i].x;
+            y = glyphs[glyph].vertexes[i].y;
+            u = glyphs[glyph].vertexes[i].u;
+            v = glyphs[glyph].vertexes[i].v;
+            Printf("%d: %f, %f; %f, %f\n", i, x, y, u, v);
+        }
+    }
+} else if (print == 5) {
+    Printf("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n", header.win_ascent, header.win_descent, header.dwordA8, header.typo_ascent, header.typo_descent, header.typo_line_gap, header.hhead_ascent, header.hhead_descent, header.hhead_line_gap, header.em_size, header.capital_height);
+}
