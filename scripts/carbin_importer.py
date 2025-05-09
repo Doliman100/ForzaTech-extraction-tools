@@ -2308,6 +2308,7 @@ for part in [*scene.parts, *scene.upgradable_parts]:
 
             mesh2 = bpy.data.meshes.new(name=name)
             mesh2.from_pydata(verts2, [], faces, False)
+            mesh2.validate()
             if norms2 is not None:
                 mesh2.normals_split_custom_set_from_vertices(norms2)
             obj = bpy.data.objects.new(name, mesh2)

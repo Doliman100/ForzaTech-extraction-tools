@@ -1228,10 +1228,9 @@ for mesh in meshes:
     # paste below
     mesh2 = bpy.data.meshes.new(name=name)
     mesh2.from_pydata(verts2, [], faces, False)
+    mesh2.validate()
     if normal0.format in [10, 37]:
         mesh2.normals_split_custom_set_from_vertices(norms2)
-    #mesh2.validate(verbose=True)
-    #mesh2.update()
     obj = bpy.data.objects.new(name, mesh2)
     #obj.rotation_euler[0] = math.radians(90) # Forza -> Blender coordinates
     #obj.scale[0] = -1
