@@ -1379,9 +1379,9 @@ class Modelbin: # CommonModel::ModelInstance?
             print(F"Warning: Mesh {mesh.name} material id {mesh.material_id} is not valid.")
         else:
             name += " " + self.materials[mesh.material_id].name
-        if "COLOR0" not in self.vertex_layouts[mesh.vertex_layout_id].elements:
-            name += " [no color]"
-            # print(F'Mesh "{name}" has no COLOR0')
+        # if "COLOR0" not in self.vertex_layouts[mesh.vertex_layout_id].elements:
+        #     name += " [no color]"
+        #     # print(F'Mesh "{name}" has no COLOR0')
         
         return name, faces, verts2, norms2, vertex_id_min, color_warning_printed
 

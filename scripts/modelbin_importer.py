@@ -1222,9 +1222,9 @@ for mesh in meshes:
     #name += F"({(mesh.render_pass >> 5) & 1}{(mesh.render_pass >> 4) & 1}{(mesh.render_pass >> 3) & 1}{(mesh.render_pass >> 2) & 1}{(mesh.render_pass >> 1) & 1}{mesh.render_pass & 1})"
     name += mesh.name
     name += " " + materials[mesh.material_id].name
-    if "COLOR0" not in vertex_layouts[mesh.vertex_layout_id].elements:
-        name += " [no color]"
-        # print(F"Mesh \"{name}\" has no COLOR0")
+    # if "COLOR0" not in vertex_layouts[mesh.vertex_layout_id].elements:
+    #     name += " [no color]"
+    #     # print(F"Mesh \"{name}\" has no COLOR0")
     # paste below
     mesh2 = bpy.data.meshes.new(name=name)
     mesh2.from_pydata(verts2, [], faces, False)
