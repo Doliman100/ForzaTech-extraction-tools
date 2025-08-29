@@ -5,6 +5,7 @@ import zlib
 #   py ca2_extractor.py <input_path> <output_path>
 # example:
 #   py ca2_extractor.py Mega.ca2 Mega.cab
+#   py ca2_extractor.py QuickPreview1.xb2 QuickPreview1.xbp
 
 # .ca2 is a concatenation of 4 MB chunks of a .cab file, compressed with zlib and aligned to 2048
 
