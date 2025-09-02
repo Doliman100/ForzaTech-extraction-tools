@@ -1,0 +1,255 @@
+//------------------------------------------------
+//--- 010 Editor v15.0.1 Binary Template
+//
+//      File: CarDatabase
+//   Authors: Doliman100
+//   Version: 0.0 (FM1)
+//   Purpose: 
+//  Category: 
+// File Mask: *.dat
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct {
+    uint32 ID;
+    uint16 Name; // CarDataStrings.str
+    uint16 IconIndex;
+    Printf("%d _&%d %d\n", ID, Name, IconIndex);
+} PartsManufacturerData;
+
+typedef struct {
+    uint32 ID;
+    uint16 Name;
+    char StringKey[18];
+    Printf("%d _&%d %s\n", ID, Name, StringKey);
+} AspirationData;
+
+typedef struct {
+    uint32 ID;
+    uint16 Name;
+    uint16 IconIndex;
+    char StringKey[16];
+    Printf("%d _&%d %d %s\n", ID, Name, IconIndex, StringKey);
+} PerformanceClassData;
+
+typedef struct {
+    uint32 ID;
+    uint16 Name;
+    uint16 DrivetrainIconIndex;
+    char StringKey[16];
+    Printf("%d _&%d %d %s\n", ID, Name, DrivetrainIconIndex, StringKey);
+} DrivetrainTypeData;
+
+typedef struct {
+    uint32 ID;
+    uint32 LocationID; // Location.dat
+    uint16 Name;
+    uint16 IconIndex;
+    char StringKey[16];
+    Printf("%d %d _&%d %d %s\n", ID, LocationID, Name, IconIndex, StringKey);
+} MakeData;
+
+typedef struct {
+    uint32 ID;
+    uint32 PerformanceClassID; // PerformanceClass.dat
+    uint16 Name;
+    uint16 IconIndex;
+    char StringKey[16];
+    Printf("%d %d _&%d %d %s\n", ID, PerformanceClassID, Name, IconIndex, StringKey);
+} PerformanceSubclassData;
+
+typedef struct {
+    uint32 ID;
+    uint32 RegionID; // Region.dat
+    uint16 Name;
+    uint16 IconIndex;
+    char StringKey[16];
+    Printf("%d %d _&%d %d %s\n", ID, RegionID, Name, IconIndex, StringKey);
+} LocationData;
+
+typedef struct {
+    uint32 ID;
+    uint16 Name;
+    uint16 Description;
+    Printf("%d _&%d _&%d\n", ID, Name, Description);
+} PartDescriptionData;
+
+typedef struct {
+    uint32 ID;
+    uint32 MakeID; // Make.dat
+    uint32 ModelFamilyID; // ModelFamily.dat
+    uint16 Name; // FullName = Make.Name + Name
+    uint16 ShortName;
+    uint16 Year;
+    uint8 gap12[2];
+    uint32 Value[4];
+    float Rarity[4];
+    uint32 DrivetrainTypeID; // DrivetrainType.dat
+    uint32 EnginePlacementID; // EnginePlacement.dat
+    uint32 BodyStyleID; // BodyStyle.dat
+    uint32 ChassisCodeID; // ChassisCode.dat
+    uint32 PerformanceSubclassID; // PerformanceSubclass.dat
+
+    uint16 UnlockString[4]; // 72 + 2*i
+    //uint16 NorthAmericaUnlockString; // 72
+    //uint16 EuropeUnlockString; // 74
+    //uint16 AsiaUnlockString; // 76
+    //uint16 ArcadeUnlockString; // 78
+
+    float TimeTo60MPH;
+    float TimeTo100MPH;
+    float TopSpeed;
+    uint8 AftermarketRims; // bool
+    struct {
+        uint8 Unlocked : 1; // bool, 93 + i; (x & 1) != 0
+        uint8 InitiallyAvailable : 1; // bool, 93 + i; (x & 2) != 0
+        uint8 __padding__ : 6;
+    } flags[4];
+    uint8 gap61[3];
+    float unk1; // access: 478830; calc ClassRating related
+    
+    if (gap12[0] || gap12[1] || gap61[0] || gap61[1] || gap61[2]) {
+        Exit(-1);
+    }
+    Printf("%d %d %d _&%d _&%d %d %d %d %d %d %g %g %g %g %d %d %d %d %d _&%d _&%d _&%d _&%d %g %g %g %d %d %d %d %d %d %d %d %d %g\n", ID, MakeID, ModelFamilyID, Name, ShortName, Year, Value[0], Value[1], Value[2], Value[3], Rarity[0], Rarity[1], Rarity[2], Rarity[3], DrivetrainTypeID, EnginePlacementID, BodyStyleID, ChassisCodeID, PerformanceSubclassID, UnlockString[0], UnlockString[1], UnlockString[2], UnlockString[3], TimeTo60MPH, TimeTo100MPH, TopSpeed, AftermarketRims != 0, flags[0].Unlocked, flags[0].InitiallyAvailable, flags[1].Unlocked, flags[1].InitiallyAvailable, flags[2].Unlocked, flags[2].InitiallyAvailable, flags[3].Unlocked, flags[3].InitiallyAvailable, unk1);
+} ModelData;
+
+typedef struct {
+    uint32 ID; // id
+    uint32 ModelID; // carid
+
+    float PeakIntakePSI; // maxboostpressure
+    float SimPeakPower; // power
+    float SimPeakAngVel; // powerangvel
+    float SimPeakTorque; // torque
+    float SimPeakTorqueAngVel; // torqueangvel
+    float SimRedlineAngVel; // redline
+
+    uint32 NumGears; // gears
+    float CurbWeight; // weight
+    float WeightDistribution; // weightdist
+    float PWR; // pwr; SimPeakPower/CurbWeight
+
+    float SimTimeTo60MPH;
+    float SimTimeTo100MPH;
+    float SimTimeQuarterMile;
+    float SimSpeedQuarterMile;
+    float SimTopSpeed;
+    float SimBrakeDistance100MPH;
+    float SimBrakeDistance60MPH;
+    float SimLatGees60MPH;
+    float SimLatGees120MPH;
+
+    uint32 Value[4]; // value
+    uint32 PerformanceSubclassID; // PerformanceSubclass.dat
+    uint32 PartsValue; // parts_value
+    uint32 min_upgrade_level; // minupgrade
+    uint32 max_upgrade_level; // maxupgrade
+    uint32 AspirationID; // Aspiration.dat
+
+    float PerformanceIndex; // performance
+    float SpeedRating; // speed
+    float AccelerationRating; // acceleration
+    float BrakingRating; // braking
+    float HandlingRating; // handling
+
+    float Rarity[4]; // rarity
+
+    float RideHeight;
+    float GearShiftTime;
+
+    uint16 FrontTireWidth;
+    uint16 FrontTireRatio;
+    uint16 FrontWheelDiameter;
+    uint16 RearTireWidth;
+    uint16 RearTireRatio;
+    uint16 RearWheelDiameter;
+
+    Printf("%d %d", ID, ModelID);
+    Printf(" %d %d", PerformanceSubclassID, AspirationID);
+    //Printf(" %g %g %g %g %g %g", PeakIntakePSI, SimPeakPower, SimPeakAngVel, SimPeakTorque, SimPeakTorqueAngVel, SimRedlineAngVel);
+    //Printf(" %d %g %g %g", NumGears, CurbWeight, WeightDistribution, PWR);
+    Printf(" %d/%d-%d %d/%d-%d", FrontTireWidth, FrontTireRatio, FrontWheelDiameter, RearTireWidth, RearTireRatio, RearWheelDiameter);
+    Printf("\n");
+} CarData;
+
+// unused
+typedef struct {
+    uint32 id;
+    uint32 region;
+    uint16 name;
+    uint8 gapA[2];
+    Printf("%d %d _&%d\n", id, region, name);
+} ManufacturersData; // Make.dat and Location.dat predecessor
+
+typedef struct {
+    uint32 id;
+    uint16 name;
+    uint16 description;
+    Printf("%d _&%d _&%d\n", id, name, description);
+} CarPartUIData; // PartDescription.dat predecessor
+
+//
+local char table_name[] = FileNameGetBase(GetFileName(), false);
+
+if (Strncmp(table_name, "Garage", 6) == 0) {
+    uint32 length;
+    local int32 i;
+    for (i = 0; i < length; i++) {
+        CarData record;
+    }
+    return;
+}
+
+while (!FEof()) {
+    switch (table_name) {
+    case "aspiration": // Aspiration
+    case "bodystyle": // BodyStyle
+    case "chassiscode": // ChassisCode
+    case "modelfamily": // ModelFamily
+        AspirationData record;
+        break;
+    case "drivetraintype": // DrivetrainType
+    case "engineplacement": // EnginePlacement
+        DrivetrainTypeData record;
+        break;
+    case "gamecars":
+        CarData record;
+        break;
+    case "location":
+        LocationData record;
+        break;
+    case "make":
+        MakeData record;
+        break;
+    case "model":
+        ModelData record;
+        break;
+    case "partdescription":
+        PartDescriptionData record;
+        break;
+    case "partsmanufacturer":
+        PartsManufacturerData record;
+        break;
+    case "performanceclass": // PerformanceClass
+    case "region": // Region
+        PerformanceClassData record;
+        break;
+    case "performancesubclass":
+        PerformanceSubclassData record;
+        break;
+
+    case "CarPartUI":
+        CarPartUIData record;
+        break;
+    case "Manufacturers":
+        ManufacturersData record;
+        break;
+
+    default:
+        Printf("Unknown table name.\n");
+        Exit(-1);
+        break;
+    }
+}
