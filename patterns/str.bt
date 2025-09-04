@@ -1,0 +1,282 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: Localized String BLOB
+//   Authors: Doliman100
+//   Version: 0.0 (FM1/2/5, FH1/2)
+//   Purpose: 
+//  Category: 
+// File Mask: *.str
+//  ID Bytes: 4C 53 42 4C, 4C 53 42 32
+//   History: 
+//------------------------------------------------
+
+local int32 print_sections = false;
+local int32 print_table = false;
+local int32 print_ini = true;
+
+// the original file format is .inf(.ini)
+
+// TODO: escape non-printable characters (\n, \r, \", \\)
+
+BitfieldRightToLeft();
+
+struct {
+    // 1.0 LSBL FM1
+    // 2.0 LSB2 FM2/5, FH1/2
+    char magic[4]; // LSBL or LSB2
+    if (magic == "LSBL") {
+        LittleEndian();
+    } else if (magic == "LSB2") {
+        uint8 endianness : 1;
+        uint8 __padding__ : 7;
+        if (endianness) {
+            BigEndian();
+            BitfieldRightToLeft();
+        } else {
+            LittleEndian();
+        }
+        uint8 gap4[3];
+        uint16 version <format=hex>;
+        uint8 gapA[2];
+    }
+    uint32 header_size;
+    uint32 sections_length;
+    uint32 sections_offsets[sections_length];
+} header;
+
+// https://github.com/open-source-parsers/jsoncpp/blob/ca98c98457b1163cca1f7d8db62827c115fec6d1/include/json/value.h#L127
+typedef enum <uint32> {
+    CommentPlacement_Before = 0,
+    CommentPlacement_AfterOnSameLine, // 1
+    CommentPlacement_After, // 2
+    CommentPlacement_Count
+} CommentPlacement;
+
+local int64 strings_section_index = -1;
+local int64 id_strings_section_index = -1;
+local int64 comments_section_index = -1;
+local int64 hashes_section_index = -1;
+
+local uint32 i = 0; // header section index
+local uint32 j = 0; // file section index
+while (!FEof()) {
+    while (header.sections_offsets[i] == 0) {
+        i++;
+    }
+
+    struct {
+        local int64 section_offset = FTell();
+        struct {
+            uint32 section_size; // including this struct
+            uint32 entries_length; // int GetNumStrings()
+        } header;
+        if (header.section_size == 8) {
+            break; // goto struct end
+        }
+        if (print_sections) {
+            Printf("%u\n", i);
+        }
+        if (i == 0) {
+            // wchar_t *GetString()
+            strings_section_index = j;
+            struct {
+                uint16 hash <format=hex>;
+                uint32 offset; // offset * 2; sizeof(wchar_t)
+            } entries[header.entries_length + 1];
+            struct {
+                local int64 p = FTell();
+                local uint32 i;
+                for (i = 0; i < header.entries_length + 1; i++) {
+                    FSeek(p + entries[i].offset * 2);
+                    struct {
+                        wchar_t data[];
+                        if (print_sections) {
+                            Printf(" %04X %u %s\n", entries[i].hash, entries[i].offset, data);
+                        }
+                    } strings;
+                }
+                FSeek(section_offset + header.section_size);
+            } strings;
+        } else if (i == 1) {
+            // ID strings, ordered by hash for binary search
+            id_strings_section_index = j;
+            struct {
+                uint16 hash <format=hex>;
+                uint16 word2; // line number?
+                uint32 offset;
+            } entries[header.entries_length];
+            struct {
+                local int64 p = FTell();
+                local uint32 i;
+                for (i = 0; i < header.entries_length; i++) {
+                    FSeek(p + entries[i].offset);
+                    struct {
+                        char data[];
+                        if (print_sections) {
+                            Printf(" %04X %u %u %s\n", entries[i].hash, entries[i].offset, entries[i].word2, data);
+                        }
+                    } strings;
+                }
+                FSeek(section_offset + header.section_size);
+            } strings;
+        } else if (i == 2) {
+            // comments
+            comments_section_index = j;
+            struct {
+                CommentPlacement placement : 8; // 2 - FH2 GameClips, TheIsland
+                uint32 hash : 16;
+                uint32 __padding__ : 8;
+                if (__padding__ != 0) {
+                    Printf("Warning: __padding__ != 0 at %08X\n", FTell());
+                }
+                uint32 offset;
+            } entries[header.entries_length] <optimize=false>;
+            struct {
+                local int64 p = FTell();
+                local uint32 i;
+                for (i = 0; i < header.entries_length; i++) {
+                    FSeek(p + entries[i].offset);
+                    struct {
+                        string data;
+                        if (print_sections) {
+                            Printf(" %04X %u %u %s\n", entries[i].hash, entries[i].placement, entries[i].offset, data);
+                        }
+                    } strings;
+                }
+                FSeek(section_offset + header.section_size);
+            } strings;
+        } else if (i == 3) {
+            // ordered by line number
+            // exists only if differs from order by hash
+            hashes_section_index = j;
+            struct {
+                uint16 hash <format=hex>;
+            } entries[header.entries_length];
+            if (print_sections) {
+                local uint32 i;
+                for (i = 0; i < header.entries_length; i++) {
+                    Printf(" %04X\n", entries[i].hash);
+                }
+            }
+        }
+    } section;
+    j++; // increment only when read section
+    
+    if (section.header.section_size != 8) {
+        i++; // increment if read valid section (don't increment if struct_size == 8)
+    }
+}
+
+if (!print_table && !print_ini) {
+    return;
+}
+
+uint32 HashFunc(char szVal[], int32 nBits, int32 fCaseSensitive, int32 version) {
+    local uint32 mask = (1L << nBits) - 1; // 0xFFFF
+    local uint32 dwHashVal;
+    if (version == 0) {
+        // FM2
+        dwHashVal = -1;
+    } else {
+        // FM5
+        dwHashVal = mask;
+    }
+    
+    local int32 i;
+    local char c;
+      for (i = 0; i < Strlen(szVal); i++) {
+        c = szVal[i];
+        if (!fCaseSensitive) {
+        c = ToLower(c);
+        }
+        dwHashVal ^= c;
+        dwHashVal = (dwHashVal << 7) | (dwHashVal >> (nBits - 7)); // rotl 7
+        dwHashVal &= mask;
+    }
+    return dwHashVal;
+}
+
+local int32 hash_function_version = -1;
+local uint32 hash;
+ for (i = 0; i < 2; i++) {
+    hash = HashFunc(section[id_strings_section_index].strings.strings[0].data, 16, false, i);
+    if (hash == section[id_strings_section_index].entries[0].hash) {
+        hash_function_version = i;
+        break;
+    }
+}
+
+local char table_name[] = FileNameGetBase(GetFileName(), false);
+local uint32 table_hash = 0;
+if (hash_function_version >= 0) {
+    table_hash = HashFunc(table_name, 16, false, hash_function_version);
+}
+
+// map
+local uint32 map[0x10000]; // hash -> string index
+
+for (i = 0; i < section[strings_section_index].header.entries_length + 1; i++) {
+    hash = section[strings_section_index].entries[i].hash;
+    map[hash] = i;
+    if (hash != 0xFFFF && hash != section[id_strings_section_index].entries[i].hash) {
+        Printf("Error: id and string hashes don't match");
+        Exit(-1);
+    }
+}
+
+local int64 section_index = hashes_section_index >= 0 ? hashes_section_index : strings_section_index;
+
+if (print_table) {
+    Printf("%04X %s\n", table_hash, table_name);
+
+    for (i = 0; i < section[section_index].header.entries_length; i++) {
+        hash = section[section_index].entries[i].hash;
+        j = map[hash];
+        Printf("%u ", section[id_strings_section_index].entries[j].word2);
+        Printf("_&%u", (table_hash << 16) | hash);
+        Printf(" %s", section[id_strings_section_index].strings.strings[j].data);
+        Printf(" %s", section[strings_section_index].strings.strings[j].data);
+        Printf("\n");
+    }
+}
+
+if (print_ini) {
+    local struct {
+        int64 indexes[CommentPlacement_Count];
+        for (i = 0; i < CommentPlacement_Count; i++) {
+            indexes[i] = -1;
+        }
+    } comments[section[strings_section_index].header.entries_length + 1];
+
+    if (comments_section_index >= 0) {
+        for (i = 0; i < section[comments_section_index].header.entries_length; i++) {
+            j = map[section[comments_section_index].entries[i].hash];
+            comments[j].indexes[section[comments_section_index].entries[i].placement] = i;
+        }
+    }
+    
+    Printf("[Strings]\n");
+
+    local int64 comment_index;
+    for (i = 0; i < section[section_index].header.entries_length; i++) {
+        j = map[section[section_index].entries[i].hash];
+        comment_index = comments[j].indexes[CommentPlacement_Before];
+        if (comment_index >= 0) {
+            Printf("%s", section[comments_section_index].strings.strings[comment_index].data);
+        }
+        Printf("%s = ", section[id_strings_section_index].strings.strings[j].data);
+        Printf("\"%s\"", section[strings_section_index].strings.strings[j].data);
+        comment_index = comments[j].indexes[CommentPlacement_AfterOnSameLine];
+        if (comment_index >= 0) {
+            Printf(";%s", section[comments_section_index].strings.strings[comment_index].data);
+        }
+        Printf("\n");
+    }
+
+    j = map[section[strings_section_index].entries[i].hash];
+    comment_index = comments[j].indexes[CommentPlacement_After];
+    if (comment_index >= 0) {
+        Printf("%s", section[comments_section_index].strings.strings[comment_index].data);
+    }
+}
