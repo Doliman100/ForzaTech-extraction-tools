@@ -18,6 +18,7 @@ Collection of patterns, scripts and more for reverse engineering ForzaTech game 
 * Draw group (exterior, cockpit, shadow, hood, windshield reflection)
 * LODs (LODS, LOD0, LOD1, ...)
 * Normals, UVs
+* Quadrangulate mesh (same as 3DSimED > .3ds > 3ds Max pipeline)
 * All ForzaTech PC and Xbox One games (FM5/6/6Apex/7/2023, FH2/3/4/5)
 * Game auto-detection heuristics
 * Materials partially (FH3 FOR_FocusRSRX_16 only)

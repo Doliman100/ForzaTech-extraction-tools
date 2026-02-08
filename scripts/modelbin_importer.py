@@ -46,6 +46,7 @@ requested_level_of_detail = 1 << 0 # LODS, LOD0, LOD1, ...
 requested_render_pass = 0xFFFF # empty: 1 << 1, max: 1 << 5
 use_materials = False # set True, if you want to test materials
 shader_processor = 1 # 0 - none, 1 - per-shader, 2 - universal shader # when use_materials == True
+quadrangulate_mesh = False
 
 TireWidthMM = 145
 Aspect = 80
@@ -1226,8 +1227,24 @@ for mesh in meshes:
     #     name += " [no color]"
     #     # print(F"Mesh \"{name}\" has no COLOR0")
     # paste below
+    if quadrangulate_mesh:
+        polys = []
+        faces_used = [False] * len(faces)
+        for i, f0 in enumerate(faces):
+            if faces_used[i]:
+                continue
+            r = next(((j, f1) for j, f1 in enumerate(faces[i + 1:], i + 1) if f0[0] == f1[2] and f0[2] == f1[0]), None)
+            if r is None:
+                polys.append([f0[0], f0[1], f0[2]])
+            else:
+                j, f1 = r
+                polys.append([f0[0], f0[1], f0[2], f1[1]])
+                faces_used[j] = True
+    else:
+        polys = faces
+
     mesh2 = bpy.data.meshes.new(name=name)
-    mesh2.from_pydata(verts2, [], faces, False)
+    mesh2.from_pydata(verts2, [], polys, False)
     mesh2.validate()
     if normal0.format in [10, 37]:
         mesh2.normals_split_custom_set_from_vertices(norms2)

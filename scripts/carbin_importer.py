@@ -77,6 +77,7 @@ suspension_transform_type = 2 # 0 - skeleton, 1 - carbin, 2 - gamedb
 create_spheres = False # depends on suspension_transform_type
 use_materials = False
 shader_processor = 1 # 0 - none, 1 - per-shader, 2 - universal shader # when use_materials == True
+quadrangulate_mesh = False
 use_db = True
 series = 0 # 0 - auto, 1 - Motorsport, 2 - Horizon
 
@@ -2306,8 +2307,24 @@ for part in [*scene.parts, *scene.upgradable_parts]:
                 if bpy.app.version >= (4, 3, 0):
                     print(F"Warning: Blender version 4.2.x required, but found: {bpy.app.version_string}")
 
+            if quadrangulate_mesh:
+                polys = []
+                faces_used = [False] * len(faces)
+                for i, f0 in enumerate(faces):
+                    if faces_used[i]:
+                        continue
+                    r = next(((j, f1) for j, f1 in enumerate(faces[i + 1:], i + 1) if f0[0] == f1[2] and f0[2] == f1[0]), None)
+                    if r is None:
+                        polys.append([f0[0], f0[1], f0[2]])
+                    else:
+                        j, f1 = r
+                        polys.append([f0[0], f0[1], f0[2], f1[1]])
+                        faces_used[j] = True
+            else:
+                polys = faces
+
             mesh2 = bpy.data.meshes.new(name=name)
-            mesh2.from_pydata(verts2, [], faces, False)
+            mesh2.from_pydata(verts2, [], polys, False)
             mesh2.validate()
             if norms2 is not None:
                 mesh2.normals_split_custom_set_from_vertices(norms2)
