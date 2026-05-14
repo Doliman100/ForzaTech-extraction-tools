@@ -407,8 +407,8 @@ class Model: # CommonModel::Model
     
     def deserialize(self, blob: Blob):
         # read metadata?
-        if not blob.version.is_at_most(1, 3):
-            print(F"Warning: Unsupported 'Modl' blob version. Found: {blob.version}. Max supported: 1.3")
+        if not blob.version.is_at_most(1, 4):
+            print(F"Warning: Unsupported 'Modl' blob version. Found: {blob.version}. Max supported: 1.4")
         if not blob.version.is_at_least(1, 0):
             print(F"Warning: Unsupported 'Modl' blob version. Found: {blob.version}. Min supported: 1.0")
 
@@ -474,8 +474,8 @@ class ModelBuffer: # CommonModel::ModelBuffer
         self.format = 0
     
     def deserialize(self, blob: Blob):
-        if not blob.version.is_at_most(1, 0):
-            print(F"Warning: Unsupported '{blob.get_tag()}' blob version. Found: {blob.version}. Max supported: 1.0")
+        if not blob.version.is_at_most(1, 1):
+            print(F"Warning: Unsupported '{blob.get_tag()}' blob version. Found: {blob.version}. Max supported: 1.1")
 
         self.length = blob.stream.read_u32()
         self.size = blob.stream.read_u32()
@@ -510,13 +510,15 @@ class Mesh: # CommonModel::Mesh
         self.uv_transforms = [None] * 5
     
     def deserialize(self, blob: Blob):
-        if not blob.version.is_at_most(1, 9):
-            print(F"Warning: Unsupported 'Mesh' blob version. Found: {blob.version}. Max supported: 1.9")
+        if not blob.version.is_at_most(1, 12):
+            print(F"Warning: Unsupported 'Mesh' blob version. Found: {blob.version}. Max supported: 1.12")
         if not blob.version.is_at_least(1, 0):
             print(F"Warning: Unsupported 'Mesh' blob version. Found: {blob.version}. Min supported: 1.0")
 
         self.name = blob.metadata[Tag.Name].read_string()
 
+        if blob.version.is_at_least(1, 13):
+            blob.stream.seek(4, os.SEEK_CUR)
         self.material_id = blob.stream.read_s16()
         if blob.version.is_at_least(1, 9):
             self.material_id = blob.stream.read_s16()
@@ -530,7 +532,10 @@ class Mesh: # CommonModel::Mesh
         blob.stream.seek(1, os.SEEK_CUR)
         if blob.version.is_at_least(1, 2):
             self.skinning_elements_count = blob.stream.read_u8()
-            self.morph_weights_count = blob.stream.read_u8()
+            if blob.version.is_at_least(1, 10):
+                self.morph_weights_count = blob.stream.read_u32()
+            else:
+                self.morph_weights_count = blob.stream.read_u8()
         if blob.version.is_at_least(1, 3):
             blob.stream.seek(1, os.SEEK_CUR)
         blob.stream.seek(1 + 2, os.SEEK_CUR)
@@ -542,6 +547,9 @@ class Mesh: # CommonModel::Mesh
         blob.stream.seek(4, os.SEEK_CUR)
         if blob.version.is_at_least(1, 6):
             blob.stream.seek(4 + 4, os.SEEK_CUR)
+            if blob.version.is_at_least(1, 11):
+                length = blob.stream.read_u32()
+                blob.stream.seek(4 * length, os.SEEK_CUR)
         self.vertex_layout_id = blob.stream.read_u32()
         self.vertex_buffer_indices_length = blob.stream.read_u32()
         self.vertex_buffer_indices = [None] * self.vertex_buffer_indices_length
@@ -551,6 +559,8 @@ class Mesh: # CommonModel::Mesh
             input_slot = blob.stream.read_s32()
             vertex_buffer_index.stride = blob.stream.read_s32()
             vertex_buffer_index.offset = blob.stream.read_s32()
+            if blob.version.is_at_least(1, 12):
+                blob.stream.seek(4, os.SEEK_CUR)
             self.vertex_buffer_indices[input_slot] = vertex_buffer_index
         if blob.version.is_at_least(1, 4):
             self.morph_data_buffer_id = blob.stream.read_s32()
@@ -720,9 +730,8 @@ class MaterialSystemObject:
             # TODO: cache files to don't process them again
             f_path = path_resolver.resolve(parent_path)
             # print("Material: " + f_path)
-            f = open(f_path, "rb", 0)
-            s = BinaryStream(f.read())
-            f.close()
+            with open(f_path, "rb", 0) as f:
+                s = BinaryStream(f.read())
             parent = MaterialSystemObject()
             parent.deserialize(s)
             self.shader_name = parent.shader_name
@@ -1158,9 +1167,9 @@ class Modelbin: # CommonModel::ModelInstance?
             self.index_buffer.deserialize(index_buffer_blobs[0])
 
         vertex_buffer_blobs = bundle.blobs[Tag.VerB] # TODO: process buffers in batch, then just access required verts?
-        self.vertex_buffers = [ModelBuffer() for _ in range(len(vertex_buffer_blobs))]
+        self.vertex_buffers = defaultdict(ModelBuffer)
         for vertex_buffer_blob in vertex_buffer_blobs:
-            self.vertex_buffers[vertex_buffer_blob.metadata[Tag.Id].read_s32() + 1].deserialize(vertex_buffer_blob)
+            self.vertex_buffers[vertex_buffer_blob.metadata[Tag.Id].read_s32()].deserialize(vertex_buffer_blob)
 
         morph_data_buffer_blobs = bundle.blobs[Tag.MBuf]
         self.morph_data_buffers = defaultdict(ModelBuffer)
@@ -1214,7 +1223,7 @@ class Modelbin: # CommonModel::ModelInstance?
         elements = defaultdict(VertexLayout_Element)
         for semantic_name, vertex_layout_element_desc in self.vertex_layouts[mesh.vertex_layout_id].elements.items():
             vertex_buffer_index = mesh.vertex_buffer_indices[vertex_layout_element_desc.input_slot]
-            vertex_buffer = self.vertex_buffers[vertex_buffer_index.id + 1]
+            vertex_buffer = self.vertex_buffers[vertex_buffer_index.id]
             
             element = elements[semantic_name]
             element.stream = BinaryStream(vertex_buffer.stream[vertex_buffer_index.offset + (vertex_id_min + mesh.base_vertex_location) * vertex_buffer.stride + vertex_buffer_offsets[vertex_layout_element_desc.input_slot] : vertex_buffer_index.offset + (vertex_id_max + mesh.base_vertex_location + 1) * vertex_buffer.stride + vertex_buffer_offsets[vertex_layout_element_desc.input_slot]])
@@ -1425,6 +1434,9 @@ class CarRenderModel11:
                 series = 2
                 if scene.version == 5:
                     known = True
+            elif self.version == 21 and scene.version == 7:
+                series = 2
+                known = True
             else:
                 series = 1
                 if self.version == 21:
@@ -1465,7 +1477,7 @@ class CarRenderModel11:
             material_indices_length = stream.read_u32()
             for _ in range(material_indices_length):
                 stream.read_string()
-                if series == 1 and self.version >= 21:
+                if series == 1 and self.version >= 21 or series == 2 and self.version >= 20:
                     stream.seek(8, os.SEEK_CUR)
                 else:
                     stream.seek(4, os.SEEK_CUR)
@@ -1508,6 +1520,9 @@ class CarRenderModel11:
                 stream.seek(1, os.SEEK_CUR)
             if self.version >= 18:
                 stream.seek(4, os.SEEK_CUR)
+            if self.version >= 19:
+                stream.seek(4, os.SEEK_CUR)
+                stream.read_string()
     
     def fix_type_case(self, name):
         match name:

@@ -385,6 +385,8 @@ class Mesh: # CommonModel::Mesh
     def deserialize(self, blob: Blob):
         self.name = blob.metadata[Tag.Name].read_string()
 
+        if blob.version.is_at_least(1, 13):
+            blob.stream.seek(4, os.SEEK_CUR)
         self.material_id = blob.stream.read_s16()
         if blob.version.is_at_least(1, 9):
             self.material_id = blob.stream.read_s16()
@@ -396,7 +398,10 @@ class Mesh: # CommonModel::Mesh
         blob.stream.seek(1, os.SEEK_CUR)
         if blob.version.is_at_least(1, 2):
             self.skinning_elements_count = blob.stream.read_u8()
-            self.morph_weights_count = blob.stream.read_u8()
+            if blob.version.is_at_least(1, 10):
+                self.morph_weights_count = blob.stream.read_u32()
+            else:
+                self.morph_weights_count = blob.stream.read_u8()
         if blob.version.is_at_least(1, 3):
             blob.stream.seek(1, os.SEEK_CUR)
         blob.stream.seek(1 + 2, os.SEEK_CUR)
@@ -408,6 +413,9 @@ class Mesh: # CommonModel::Mesh
         blob.stream.seek(4, os.SEEK_CUR)
         if blob.version.is_at_least(1, 6):
             blob.stream.seek(4 + 4, os.SEEK_CUR)
+            if blob.version.is_at_least(1, 11):
+                length = blob.stream.read_u32()
+                blob.stream.seek(4 * length, os.SEEK_CUR)
         self.vertex_layout_id = blob.stream.read_u32()
         self.vertex_buffer_indices_length = blob.stream.read_u32()
         self.vertex_buffer_indices = [None] * self.vertex_buffer_indices_length
@@ -417,6 +425,8 @@ class Mesh: # CommonModel::Mesh
             input_slot = blob.stream.read_s32()
             vertex_buffer_index.stride = blob.stream.read_s32()
             vertex_buffer_index.offset = blob.stream.read_s32()
+            if blob.version.is_at_least(1, 12):
+                blob.stream.seek(4, os.SEEK_CUR)
             self.vertex_buffer_indices[input_slot] = vertex_buffer_index
         if blob.version.is_at_least(1, 4):
             self.morph_data_buffer_id = blob.stream.read_s32()
@@ -1002,9 +1012,9 @@ index_buffer = ModelBuffer()
 index_buffer.deserialize(index_buffer_blobs[0])
 
 vertex_buffer_blobs = bundle.blobs[Tag.VerB] # TODO: process buffers in batch, then just access required verts?
-vertex_buffers = [ModelBuffer() for _ in range(len(vertex_buffer_blobs))]
+vertex_buffers = defaultdict(ModelBuffer)
 for vertex_buffer_blob in vertex_buffer_blobs:
-    vertex_buffers[vertex_buffer_blob.metadata[Tag.Id].read_s32() + 1].deserialize(vertex_buffer_blob)
+    vertex_buffers[vertex_buffer_blob.metadata[Tag.Id].read_s32()].deserialize(vertex_buffer_blob)
 
 morph_data_buffer_blobs = bundle.blobs[Tag.MBuf]
 morph_data_buffers = defaultdict(ModelBuffer)
@@ -1073,7 +1083,7 @@ for mesh in meshes:
     elements = defaultdict(VertexLayout_Element)
     for semantic_name, vertex_layout_element_desc in vertex_layouts[mesh.vertex_layout_id].elements.items():
         vertex_buffer_index = mesh.vertex_buffer_indices[vertex_layout_element_desc.input_slot]
-        vertex_buffer = vertex_buffers[vertex_buffer_index.id + 1]
+        vertex_buffer = vertex_buffers[vertex_buffer_index.id]
         
         element = elements[semantic_name]
         element.stream = BinaryStream(vertex_buffer.stream[vertex_buffer_index.offset + (vertex_id_min + mesh.base_vertex_location) * vertex_buffer.stride + vertex_buffer_offsets[vertex_layout_element_desc.input_slot] : vertex_buffer_index.offset + (vertex_id_max + mesh.base_vertex_location + 1) * vertex_buffer.stride + vertex_buffer_offsets[vertex_layout_element_desc.input_slot]])
