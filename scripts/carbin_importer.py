@@ -475,6 +475,8 @@ class ModelBuffer: # CommonModel::ModelBuffer
     def deserialize(self, blob: Blob):
         if not blob.version.is_at_most(1, 1):
             print(F"Warning: Unsupported '{blob.get_tag()}' blob version. Found: {blob.version}. Max supported: 1.1")
+        if not blob.version.is_at_least(1, 0):
+            print(F"Warning: Unsupported '{blob.get_tag()}' blob version. Found: {blob.version}. Min supported: 1.0")
 
         self.length = blob.stream.read_u32()
         self.size = blob.stream.read_u32()
@@ -1453,7 +1455,7 @@ class CarRenderModel11:
             else:
                 print("Assumed game series: Forza Motorsport")
             series_is_weak = False
-        max_version = 18 if series == 2 else 21
+        max_version = 21 if series == 2 else 21
         if self.version > max_version:
             print(F"Warning: Unsupported CarRenderModel11 version. Found: {self.version}. Max supported: {max_version}")
         if self.version < 1:
@@ -1838,7 +1840,7 @@ class CarScene:
         if series == 0 and self.version in [10, 11]:
             series = 1
             series_is_weak = True
-        max_version = 6 if series == 2 else 11
+        max_version = 7 if series == 2 else 11
         if self.version > max_version:
             print(F"Warning: Unsupported CarScene version. Found: {self.version}. Max supported: {max_version}")
         if self.version < 1:
