@@ -1038,11 +1038,14 @@ for material_blob in material_blobs:
     materials[material_blob.metadata[Tag.Id].read_s32()].deserialize(material_blob)
 
 # processing
+# assume that the first VerB in the file contains all possible vertices
+max_vertex_buffer_length = next(iter(vertex_buffers.values())).length
+
 draw_indices = [None] * index_buffer.length
-verts = [(0, 0, 0)] * vertex_buffers[0].length # assumption that VerB[-1] contains all possible vertices
-norms = [(0, 0, 0)] * vertex_buffers[0].length
-uvs = [[(0, 0)] * vertex_buffers[0].length for _ in range(5)]
-colors = [(1, 1, 1, 1)] * vertex_buffers[0].length
+verts = [(0, 0, 0)] * max_vertex_buffer_length
+norms = [(0, 0, 0)] * max_vertex_buffer_length
+uvs = [[(0, 0)] * max_vertex_buffer_length for _ in range(5)]
+colors = [(1, 1, 1, 1)] * max_vertex_buffer_length
 
 class VertexLayout_Element:
     def __init__(self):

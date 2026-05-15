@@ -1193,11 +1193,14 @@ class Modelbin: # CommonModel::ModelInstance?
             self.materials[material_blob.metadata[Tag.Id].read_s32()].deserialize(material_blob)
 
     def process_mesh(self, mesh: Mesh):
+        # assume that the first VerB in the file contains all possible vertices
+        max_vertex_buffer_length = next(iter(self.vertex_buffers.values())).length
+
         self.draw_indices = [None] * self.index_buffer.length
-        self.verts = [(0, 0, 0)] * self.vertex_buffers[0].length # assumption that VerB[-1] contains all possible vertices
-        self.norms = [(0, 0, 0)] * self.vertex_buffers[0].length
-        self.uvs = [[(0, 0)] * self.vertex_buffers[0].length for _ in range(5)]
-        self.colors = [(1, 1, 1, 1)] * self.vertex_buffers[0].length
+        self.verts = [(0, 0, 0)] * max_vertex_buffer_length
+        self.norms = [(0, 0, 0)] * max_vertex_buffer_length
+        self.uvs = [[(0, 0)] * max_vertex_buffer_length for _ in range(5)]
+        self.colors = [(1, 1, 1, 1)] * max_vertex_buffer_length
 
         vertex_id_min = 0xFFFFFFFF
         vertex_id_max = 0
