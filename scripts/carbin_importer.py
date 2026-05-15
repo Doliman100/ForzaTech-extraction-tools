@@ -88,9 +88,8 @@ class BinaryStream:
     
     @staticmethod
     def from_path(path: str):
-        f = open(path, "rb", 0)
-        s = BinaryStream(memoryview(f.read()))
-        f.close()
+        with open(path, "rb", 0) as f:
+            s = BinaryStream(memoryview(f.read()))
         return s
     
     def __getitem__(self, key: slice):
@@ -2274,7 +2273,11 @@ for wheel_index in range(6):
             control_arm_model.modelbin.set_transform(transform)
     scene.part_tires.tire_models[wheel_index].modelbin.set_transform(wheel_model.modelbin.transform)
 
-blender_version_checked = False
+if bpy.app.version < (4, 1, 0):
+    raise RuntimeError(F"Blender version 4.1.0 or later required, but found: {bpy.app.version_string}")
+if bpy.app.version >= (5, 2, 0):
+    print(F"Warning: Blender version 5.1.1 tested, but found: {bpy.app.version_string}")
+
 root_collection = None
 for part in [*scene.parts, *scene.upgradable_parts]:
     if suspension_only and part.type != 44 and part.type != 4 and part.type != 2 and part.type != 8:
@@ -2318,13 +2321,6 @@ for part in [*scene.parts, *scene.upgradable_parts]:
             # if not color_warning_printed:
             #     continue
             # paste below
-            if not blender_version_checked:
-                blender_version_checked = True
-                if bpy.app.version < (4, 2, 0):
-                    raise RuntimeError(F"Blender version 4.2.x required, but found: {bpy.app.version_string}")
-                if bpy.app.version >= (4, 3, 0):
-                    print(F"Warning: Blender version 4.2.x required, but found: {bpy.app.version_string}")
-
             if quadrangulate_mesh:
                 polys = []
                 faces_used = [False] * len(faces)
