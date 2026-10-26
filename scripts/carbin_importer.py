@@ -1133,7 +1133,7 @@ class Modelbin: # CommonModel::ModelInstance?
 
     def deserialize(self, stream: BinaryStream):
         bundle = Bundle()
-        bundle.deserialize(s)
+        bundle.deserialize(stream)
 
         model_blobs = bundle.blobs[Tag.Modl]
         if len(model_blobs) != 1:
@@ -1883,7 +1883,7 @@ path_resolver = GamePathResolver(game_path)
 if use_db:
     try:
         with closing(sqlite3.connect(pathlib.Path(db_path).as_uri() + "?mode=ro", uri=True)) as connection:
-            cursor = connection.execute(F"""
+            cursor = connection.execute("""
             SELECT Data_Car.MediaName,
                 Data_Car.Id,
                 List_UpgradeCarBody.CarBodyID,
@@ -1906,10 +1906,11 @@ if use_db:
                 INNER JOIN List_UpgradeTireCompound ON List_UpgradeTireCompound.Ordinal = Data_Car.Id
                 INNER JOIN List_UpgradeCarBody ON List_UpgradeCarBody.Ordinal = Data_Car.Id
                 INNER JOIN Data_CarBody ON Data_CarBody.Id = List_UpgradeCarBody.CarBodyID
-            WHERE MediaName LIKE '{media_name}'
+            WHERE Data_Car.MediaName = ? COLLATE NOCASE
                 AND List_UpgradeTireCompound.IsStock = 1
-            ORDER BY List_UpgradeCarBody.CarBodyID
-            """)
+                AND (List_UpgradeCarBody.IsStock = 1 OR ? IS NOT NULL)
+            ORDER BY List_UpgradeCarBody.IsStock DESC, List_UpgradeCarBody.CarBodyID
+            """, (media_name, car_body_id))
             rows = cursor.fetchall()
     except sqlite3.OperationalError as e:
         if e.sqlite_errorcode == sqlite3.SQLITE_CANTOPEN:
@@ -1920,18 +1921,22 @@ if use_db:
         raise
     except sqlite3.DatabaseError as e:
         if e.sqlite_errorcode == sqlite3.SQLITE_NOTADB:
-            e.args = (F'The database file is not SQLite3, it\'s probably encrypted. db_path = "{db_path}"',)
+            e.args = (F'The database file is not readable SQLite3; it may be encrypted or invalid. db_path = "{db_path}"',)
         raise
 
     if not rows:
-        raise RuntimeError(F'The database file doesn\'t contain the requested MediaName "{media_name}", it\'s probably outdated. db_path = "{db_path}"')
+        raise RuntimeError(
+            F'No GameDB record with stock tires and a matching car body for MediaName "{media_name}". db_path = "{db_path}"'
+        )
     
     if car_body_id is None:
         row = rows[0]
     else:
-        for row in reversed(rows):
-            if row[2] == car_body_id:
-                break
+        row = next((candidate for candidate in rows if candidate[2] == car_body_id), None)
+        if row is None:
+            raise RuntimeError(
+                F'The database has no CarBodyID {car_body_id} for MediaName "{media_name}". db_path = "{db_path}"'
+            )
 
     media_name = row[0]
     TireModelName = row[3]
@@ -2234,14 +2239,14 @@ for wheel_index in range(6):
                     for i in range(3):
                         caliper_local_transform[j][i] = caliper_model.transform[j][i]
 
+    spindle_transform = wheel_model.transform
+    translate_x = [[1 if i == j else 0 for i in range(4)] for j in range(4)]
+    translate_x[3][0] = spindle_offset
+
     # 142A57058 Presentation11::CarPresentation::SetWheelAndTireTransforms
     if suspension_transform_type == 2:
         # wheel
-        spindle_transform = wheel_model.transform
         wheel_model.modelbin.set_transform(spindle_transform)
-
-        translate_x = [[1 if i == j else 0 for i in range(4)] for j in range(4)]
-        translate_x[3][0] = spindle_offset
 
         # brake
         if rotor_model is not None:
@@ -2260,7 +2265,9 @@ for wheel_index in range(6):
                             caliper_transform[i][j] += caliper_local_transform[i][k] * brake_transform[k][j] # assume that hub_transform == spindle_transform (rotate around Y-axis)
                 caliper_model.modelbin.set_transform(caliper_transform)
 
-        # control arm
+    # Carbin control-arm transforms are commonly identity matrices. Position
+    # them relative to the spindle for both carbin and GameDB wheel transforms.
+    if suspension_transform_type in [1, 2]:
         control_arm_model = scene.control_arm_models[wheel_index]
         if control_arm_model is not None:
             transform = [[0 for _ in range(4)] for _ in range(4)]
@@ -2437,8 +2444,17 @@ for part in [*scene.parts, *scene.upgradable_parts]:
                 texture = material_instance.normal_texture
                 if texture is not None:
                     normal_map_node = material.node_tree.nodes.new("ShaderNodeNormalMap")
-                    normal_map_node.uv_map = material_instance.normal_texture_texcoord
-                    material.node_tree.links.new(normal_map_node.outputs[0], principled_bsdf.inputs[5])
+                    if hasattr(normal_map_node, "space"):
+                        try:
+                            normal_map_node.space = "DIRECTX"
+                        except Exception:
+                            pass
+                    if getattr(material_instance, "normal_texture_texcoord", None):
+                        try:
+                            normal_map_node.uv_map = material_instance.normal_texture_texcoord
+                        except Exception:
+                            pass
+                    material.node_tree.links.new(normal_map_node.outputs[0], principled_bsdf.inputs["Normal"])
                     
                     texture_image = bpy.data.images.get(texture.guid)
                     if texture_image is None:
@@ -2449,7 +2465,7 @@ for part in [*scene.parts, *scene.upgradable_parts]:
                         texture_image.colorspace_settings.name = "Non-Color"
                     texture_image_node = material.node_tree.nodes.new("ShaderNodeTexImage")
                     texture_image_node.image = texture_image
-                    material.node_tree.links.new(texture_image_node.outputs[0], normal_map_node.inputs[1])
+                    material.node_tree.links.new(texture_image_node.outputs[0], normal_map_node.inputs["Color"])
                     
                     uv_mul_node = material.node_tree.nodes.new("ShaderNodeVectorMath")
                     uv_mul_node.operation = "MULTIPLY"

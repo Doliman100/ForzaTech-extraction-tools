@@ -1356,8 +1356,17 @@ for mesh in meshes:
         texture = material_instance.normal_texture
         if texture is not None:
             normal_map_node = material.node_tree.nodes.new("ShaderNodeNormalMap")
-            normal_map_node.uv_map = material_instance.normal_texture_texcoord
-            material.node_tree.links.new(normal_map_node.outputs[0], principled_bsdf.inputs[5])
+            if hasattr(normal_map_node, "space"):
+                try:
+                    normal_map_node.space = "DIRECTX"
+                except Exception:
+                    pass
+            if getattr(material_instance, "normal_texture_texcoord", None):
+                try:
+                    normal_map_node.uv_map = material_instance.normal_texture_texcoord
+                except Exception:
+                    pass
+            material.node_tree.links.new(normal_map_node.outputs[0], principled_bsdf.inputs["Normal"])
             
             texture_image = bpy.data.images.get(texture.guid)
             if texture_image is None:
@@ -1368,7 +1377,7 @@ for mesh in meshes:
                 texture_image.colorspace_settings.name = "Non-Color"
             texture_image_node = material.node_tree.nodes.new("ShaderNodeTexImage")
             texture_image_node.image = texture_image
-            material.node_tree.links.new(texture_image_node.outputs[0], normal_map_node.inputs[1])
+            material.node_tree.links.new(texture_image_node.outputs[0], normal_map_node.inputs["Color"])
             
             uv_mul_node = material.node_tree.nodes.new("ShaderNodeVectorMath")
             uv_mul_node.operation = "MULTIPLY"
